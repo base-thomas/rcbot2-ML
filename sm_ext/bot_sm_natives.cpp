@@ -210,7 +210,7 @@ cell_t sm_botAim(IPluginContext *pContext, const cell_t *params) {
 	return 0;
 }
 
-cell_t sm_botsAim(IPluginContext *pContext, const cell_t *params) {
+cell_t sm_botsAim(IPluginContext *pContext, const cell_t *params) { // depreciated, was used for testing of airshot model
 
 	//find target bot by name
 	edict_t *pEdict = CBotGlobals::findPlayerByTruncName("bot0_");
@@ -292,7 +292,7 @@ cell_t sm_botFire(IPluginContext *pContext, const cell_t *params) {
 	return 0;
 }
 
-cell_t sm_botsFire(IPluginContext *pContext, const cell_t *params) {
+cell_t sm_botsFire(IPluginContext *pContext, const cell_t *params) { // depreciated, was used for testing of airshot model
 	//find target bot by name
 	edict_t *pEdict = CBotGlobals::findPlayerByTruncName("bot0_");
 	if (pEdict == nullptr) {
