@@ -2,6 +2,7 @@
 
 ## Information:-
 
+This is a fork (of a fork) of below, modified to enable more granular control of bots (by base_thomas).
 This is a fork of [the official RCBot2 plugin][rcbot2] written by Cheeseh.
 Special thanks to pongo1231 for adding more TF2 support and NoSoop for adding AMBuild support and many more!
 
