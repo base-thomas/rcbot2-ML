@@ -1,4 +1,4 @@
-#ifdef WIN32
+#if defined(_WIN64) || defined(_WIN32)
 #include <Windows.h>
 #else
 
@@ -50,12 +50,12 @@ void *GetGameRules()
 	return *g_pGameRules;
 }
 
-size_t CSignatureFunction::decodeHexString(unsigned char* buffer, const size_t maxlength, const char* hexstr)
+std::size_t CSignatureFunction::decodeHexString(unsigned char* buffer, const std::size_t maxlength, const char* hexstr)
 {
-	size_t written = 0;
-	const size_t length = std::strlen(hexstr);
+	std::size_t written = 0;
+	const std::size_t length = std::strlen(hexstr);
 
-	for (size_t i = 0; i < length; i++)
+	for (std::size_t i = 0; i < length; i++)
 	{
 		if (written >= maxlength)
 			break;
@@ -93,15 +93,14 @@ size_t CSignatureFunction::decodeHexString(unsigned char* buffer, const size_t m
 
 bool CSignatureFunction::getLibraryInfo(const void *libPtr, DynLibInfo &lib)
 {
-	uintptr_t baseAddr;
+	std::uintptr_t baseAddr;
 
 	if (libPtr == nullptr)
 	{
 		return false;
 	}
 
-#ifdef _WIN32
-
+#if defined(_WIN64) || defined(_WIN32)
 
 	MEMORY_BASIC_INFORMATION info;
 
@@ -110,11 +109,11 @@ bool CSignatureFunction::getLibraryInfo(const void *libPtr, DynLibInfo &lib)
 		return false;
 	}
 
-	baseAddr = reinterpret_cast<uintptr_t>(info.AllocationBase);
+	baseAddr = reinterpret_cast<std::uintptr_t>(info.AllocationBase);
 
 	// All this is for our insane sanity checks :o 
 	const IMAGE_DOS_HEADER* dos = reinterpret_cast<IMAGE_DOS_HEADER*>(baseAddr);
-	IMAGE_NT_HEADERS* pe = reinterpret_cast<IMAGE_NT_HEADERS*>(baseAddr + dos->e_lfanew);
+	IMAGE_NT_HEADERS* pe = reinterpret_cast<IMAGE_NT_HEADERS*>(baseAddr + static_cast<std::uintptr_t>(dos->e_lfanew));
 	IMAGE_FILE_HEADER* file = &pe->FileHeader;
 	const IMAGE_OPTIONAL_HEADER* opt = &pe->OptionalHeader;
 
@@ -139,7 +138,7 @@ bool CSignatureFunction::getLibraryInfo(const void *libPtr, DynLibInfo &lib)
 	}
 
 	//Finally, we can do this
-	lib.memorySize = static_cast<size_t>(opt->SizeOfImage);
+	lib.memorySize = static_cast<std::size_t>(opt->SizeOfImage);
 
 #else
 	Dl_info info;
@@ -158,7 +157,7 @@ bool CSignatureFunction::getLibraryInfo(const void *libPtr, DynLibInfo &lib)
 	}
 
 	// This is for our insane sanity checks :o 
-	baseAddr = reinterpret_cast<uintptr_t>(info.dli_fbase);
+	baseAddr = reinterpret_cast<std::uintptr_t>(info.dli_fbase);
 	file = reinterpret_cast<Elf32_Ehdr *>(baseAddr);
 
 	// Check ELF magic 
@@ -215,7 +214,7 @@ bool CSignatureFunction::getLibraryInfo(const void *libPtr, DynLibInfo &lib)
 	return true;
 }
 
-void *CSignatureFunction::findPattern(const void *libPtr, const char *pattern, const size_t len)
+void *CSignatureFunction::findPattern(const void *libPtr, const char *pattern, const std::size_t len)
 {
 	DynLibInfo lib;
 
@@ -232,7 +231,7 @@ void *CSignatureFunction::findPattern(const void *libPtr, const char *pattern, c
 	while (ptr < end)
 	{
 		bool found = true;
-		for (size_t i = 0; i < len; i++)
+		for (std::size_t i = 0; i < len; i++)
 		{
 			if (pattern[i] != '\x2A' && pattern[i] != ptr[i])
 			{
@@ -255,7 +254,7 @@ void *CSignatureFunction::findSignature(const void* addrInBase, const char* sign
 	// First, preprocess the signature 
 	unsigned char real_sig[511];
 
-	const size_t real_bytes = decodeHexString(real_sig, sizeof real_sig, signature);
+	const std::size_t real_bytes = decodeHexString(real_sig, sizeof real_sig, signature);
 
 	if (real_bytes >= 1)
 	{
@@ -278,7 +277,7 @@ void CSignatureFunction::findFunc(const CRCBotKeyValueList& kv, const char* pKey
 
 CGameRulesObject::CGameRulesObject(CRCBotKeyValueList &list, void *pAddrBase)
 {
-#ifdef _WIN32
+#if defined(_WIN64) || defined(_WIN32)
 	m_func = nullptr;
 #else
 	findFunc(list, "g_pGameRules", pAddrBase, "@g_pGameRules");
@@ -287,15 +286,15 @@ CGameRulesObject::CGameRulesObject(CRCBotKeyValueList &list, void *pAddrBase)
 
 CCreateGameRulesObject::CCreateGameRulesObject(const CRCBotKeyValueList &list, const void *pAddrBase)
 {
-#ifdef _WIN32
+#if defined(_WIN64) || defined(_WIN32)
 	findFunc(list, "create_gamerules_object_win", pAddrBase, R"(\x55\x8B\xEC\x8B\x0D\x2A\x2A\x2A\x2A\x85\xC9\x74\x07)");
 #else
-	m_func = NULL;
+	m_func = nullptr;
 #endif
 }
 
-void **CCreateGameRulesObject::getGameRules() const
+void** CCreateGameRulesObject::getGameRules() const
 {
-	char *addr = static_cast<char*>(m_func);
-	return *reinterpret_cast<void ***>(addr + rcbot_gamerules_offset.GetInt());
+	char* addr = static_cast<char*>(m_func);
+	return *reinterpret_cast<void***>(addr + static_cast<std::ptrdiff_t>(rcbot_gamerules_offset.GetInt()));
 }

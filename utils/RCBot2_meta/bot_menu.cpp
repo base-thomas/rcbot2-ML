@@ -67,9 +67,8 @@ const char* CWaypointFlagMenu::getCaption(CClient* pClient, WptColor& color)
 	pClient->updateCurrentWaypoint();
 
 	const int iWpt = pClient->currentWaypoint();
-	const CWaypoint* pWpt = CWaypoints::getWaypoint(iWpt);
 
-	if (pWpt)
+	if (const CWaypoint* pWpt = CWaypoints::getWaypoint(iWpt))
 	{
 		color = CWaypointTypes::getColour(pWpt->getFlags());
 		snprintf(m_szCaption, sizeof(m_szCaption), "Waypoint Flags ID = [%d]", iWpt);
@@ -115,14 +114,14 @@ CWaypointFlagMenu::CWaypointFlagMenu(CBotMenu* pPrev)
 	// 8. More...
 	// 9. Go Back
 
-	const unsigned iNumTypes = CWaypointTypes::getNumTypes();
+	const std::size_t iNumTypes = CWaypointTypes::getNumTypes();
 
-	int iNumAdded = 0;
+	std::size_t iNumAdded = 0;
 
 	CBotMenu* pCurrent = this;
 	CBotMenu* pParent = pPrev;
 
-	for (unsigned i = 0; i < iNumTypes; i++)
+	for (std::size_t i = 0; i < iNumTypes; i++)
 	{
 		if (!CWaypointTypes::getTypeByIndex(i)->forMod(iMod))
 			continue;
@@ -207,9 +206,7 @@ const char* CWaypointMenu::getCaption(CClient* pClient, WptColor& color)
 
 const char* CWaypointYawMenuItem::getCaption(CClient* pClient, WptColor& color)
 {
-	const CWaypoint* pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-	if (pWpt)
+	if (const CWaypoint* pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint()))
 		snprintf(m_szCaption, sizeof(m_szCaption), "Yaw = %d degrees (press to update)", static_cast<int>(pWpt->getAimYaw()));
 	else
 		snprintf(m_szCaption, sizeof(m_szCaption), "No Waypoint");
@@ -219,18 +216,15 @@ const char* CWaypointYawMenuItem::getCaption(CClient* pClient, WptColor& color)
 
 void CWaypointYawMenuItem::activate(CClient* pClient)
 {
-	CWaypoint* pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-	if (pWpt)
+	if (CWaypoint* pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint()))
 		pWpt->setAim(CBotGlobals::playerAngles(pClient->getPlayer()).y);
 }
 
 void CWaypointAreaIncrease::activate(CClient* pClient)
 {
 	const int iWpt = pClient->currentWaypoint();
-	CWaypoint* pWpt = CWaypoints::getWaypoint(iWpt);
 
-	if (pWpt)
+	if (CWaypoint* pWpt = CWaypoints::getWaypoint(iWpt))
 	{
 		pWpt->setArea(pWpt->getArea() + 1);
 	}
@@ -239,9 +233,8 @@ void CWaypointAreaIncrease::activate(CClient* pClient)
 void CWaypointAreaDecrease::activate(CClient* pClient)
 {
 	const int iWpt = pClient->currentWaypoint();
-	CWaypoint* pWpt = CWaypoints::getWaypoint(iWpt);
 
-	if (pWpt)
+	if (CWaypoint* pWpt = CWaypoints::getWaypoint(iWpt))
 	{
 		pWpt->setArea(pWpt->getArea() - 1);
 	}
@@ -250,9 +243,8 @@ void CWaypointAreaDecrease::activate(CClient* pClient)
 void CWaypointRadiusIncrease::activate(CClient* pClient)
 {
 	const int iWpt = pClient->currentWaypoint();
-	CWaypoint* pWpt = CWaypoints::getWaypoint(iWpt);
 
-	if (pWpt)
+	if (CWaypoint* pWpt = CWaypoints::getWaypoint(iWpt))
 	{
 		const float fRadius = pWpt->getRadius();
 
@@ -266,13 +258,10 @@ void CWaypointRadiusIncrease::activate(CClient* pClient)
 void CWaypointRadiusDecrease::activate(CClient* pClient)
 {
 	const int iWpt = pClient->currentWaypoint();
-	CWaypoint* pWpt = CWaypoints::getWaypoint(iWpt);
 
-	if (pWpt)
+	if (CWaypoint* pWpt = CWaypoints::getWaypoint(iWpt))
 	{
-		const float fRadius = pWpt->getRadius();
-
-		if (fRadius > 32.0f)
+		if (const float fRadius = pWpt->getRadius(); fRadius > 32.0f)
 			pWpt->setRadius(fRadius - 32.0f);
 		else
 			pWpt->setRadius(0.0f);
@@ -291,9 +280,7 @@ void CWaypointCutMenuItem::activate(CClient* pClient)
 {
 	pClient->updateCurrentWaypoint();
 
-	CWaypoint* pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-	if (pWpt)
+	if (const CWaypoint* pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint()))
 	{
 		pClient->setWaypointCut(pWpt);
 		CWaypoints::deleteWaypoint(pClient->currentWaypoint());
@@ -312,9 +299,7 @@ void CWaypointCopyMenuItem::activate(CClient* pClient)
 {
 	pClient->updateCurrentWaypoint();
 
-	CWaypoint* pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-	if (pWpt)
+	if (const CWaypoint* pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint()))
 	{
 		pClient->setWaypointCopy(pWpt);
 	}
@@ -356,13 +341,14 @@ void CBotMenu::render(CClient* pClient)
 
 	const char* pszCaption = getCaption(pClient, color);
 
-#if SOURCE_ENGINE == SE_TF2 || SOURCE_ENGINE == SE_HL2DM 
-	debugoverlay->AddScreenTextOverlay(0.135f, 0.4f, 0, fUpdateTime, color.r, color.g, color.b, color.a, pszCaption);
-	debugoverlay->AddScreenTextOverlay(0.135f, 0.4f, 1, fUpdateTime, color.r, color.g, color.b, color.a, "----------------");
-#else
+	//TODO: to allow waypoint menu work for the newer SDK2013 for CSS, DODS, HL2DM and TF2 [APG]RoboCop[CL]
+//#if SOURCE_ENGINE == SE_TF2 || SOURCE_ENGINE == SE_HL2DM 
+//	debugoverlay->AddScreenTextOverlay(0.135f, 0.4f, 0, fUpdateTime, color.r, color.g, color.b, color.a, pszCaption);
+//	debugoverlay->AddScreenTextOverlay(0.135f, 0.4f, 1, fUpdateTime, color.r, color.g, color.b, color.a, "----------------");
+//#else
 	debugoverlay->AddTextOverlayRGB(vOrigin, 0, fUpdateTime, color.r, color.g, color.b, color.a, pszCaption);
 	debugoverlay->AddTextOverlayRGB(vOrigin, 1, fUpdateTime, color.r, color.g, color.b, color.a, "----------------");
-#endif
+//#endif
 	/*
 		Vector screen;
 		Vector point = Vector(0,0,0);
@@ -370,7 +356,7 @@ void CBotMenu::render(CClient* pClient)
 		debugoverlay->ScreenPosition(0.5f, 0.5f, screen);
 		debugoverlay->ScreenPosition(point,screen);*/
 
-	for (unsigned i = 0; i < m_MenuItems.size(); i++)
+	for (int i = 0; i < static_cast<int>(m_MenuItems.size()); i++)
 	{
 		CBotMenuItem* item = m_MenuItems[i];
 
@@ -437,7 +423,8 @@ CWaypointFlagShowMenu::CWaypointFlagShowMenu(CBotMenu* pParent)
 	// 8. More...
 	// 9. Go Back
 
-	const unsigned iNumTypes = CWaypointTypes::getNumTypes();
+	const std::size_t iNumTypes = CWaypointTypes::getNumTypes();
+
 	int iNumAdded = 0;
 
 	CBotMenu* pCurrent = this;

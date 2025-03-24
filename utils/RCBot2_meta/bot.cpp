@@ -87,6 +87,11 @@
 #include <random>
 #include <vector>
 
+//caxanga334: SDK 2013 contains macros for std::min and std::max which causes errors when compiling
+//#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
+#include "valve_minmax_off.h"
+//#endif
+
 constexpr float DEG_TO_RAD(const float x) { return x * 0.0174533f; }
 constexpr float RAD_TO_DEG(const float x) { return x * 57.29578f; }
 
@@ -202,7 +207,7 @@ void CBot::runPlayerMove()
 	}
 
 	cmd.buttons = m_iButtons;
-	cmd.impulse = m_iImpulse; //impulse should be as 'byte' not 'int'? [APG]RoboCop[CL]
+	cmd.impulse = m_iImpulse;
 	cmd.viewangles = m_vViewAngles;
 	cmd.weaponselect = m_iSelectWeapon;
 	cmd.tick_count = gpGlobals->tickcount;
@@ -1237,9 +1242,8 @@ void CBot :: updateConditions ()
 					removeCondition(CONDITION_SEE_SQUAD_LEADER);
 
 				float fSpeed = 0.0f;
-				const CClient *pClient = CClients::get(pLeader);
 
-				if ( pClient )
+				if ( const CClient *pClient = CClients::get(pLeader) )
 					fSpeed = pClient->getSpeed();
 
 				// update squad idle condition. If squad is idle, bot can move around a small radius 
@@ -1522,9 +1526,7 @@ void CBot::setLastEnemy(edict_t *pEnemy)
 
 bool CBot :: selectBotWeapon ( CBotWeapon *pBotWeapon )
 {
-	const int id = pBotWeapon->getWeaponIndex();
-
-	if ( id )
+	if ( const int id = pBotWeapon->getWeaponIndex() )
 	{
 		selectWeapon(id);
 		return true;
@@ -1782,7 +1784,7 @@ void CBot ::debugBot(char *msg)
 
 	szConditions[0] = 0; // initialise string
 
-	for (size_t iCond = 0; iCond < NUM_CONDITIONS; iCond++)
+	for (std::size_t iCond = 0; iCond < NUM_CONDITIONS; iCond++)
 	{
 		if ( m_iConditions[iCond] )
 		{
@@ -1823,7 +1825,7 @@ void CBot ::debugBot(char *msg)
 		Enemy: %s (name = '%s')\n \
 		---CONDITIONS---\n%s",
 		m_szBotName,
-		m_CurrentUtil >= 0 ? g_szUtils[m_CurrentUtil] : "none",
+		m_CurrentUtil < BOT_UTIL_MAX + 1 ? g_szUtils[m_CurrentUtil] : "none",
 		m_pSchedules->isEmpty() ? "none" : m_pSchedules->getCurrentSchedule()->getIDString(),
 		hastask ? task_string : "none",
 		g_szLookTaskToString[m_iLookTask],
@@ -2526,7 +2528,7 @@ void CBot::modAim ( edict_t *pEntity, Vector &v_origin, Vector *v_desired_offset
 
 }
 
-void CBot::hearVoiceCommand(edict_t* pPlayer, byte cmd) //Needs properly implemented? [APG]RoboCop[CL]
+void CBot::hearVoiceCommand(edict_t* pPlayer, byte voiceCmd) //Needs properly implemented? [APG]RoboCop[CL]
 {
 }
 
@@ -2537,7 +2539,7 @@ void CBot :: grenadeThrown ()
 
 void CBot::voiceCommand(byte voiceCmd)
 {
-	
+
 }
 
 void CBot :: checkCanPickup ( edict_t *pPickup )
@@ -2870,13 +2872,9 @@ void CBot :: changeAngles (float fSpeed, const float* fIdeal, float* fCurrent, f
 
 bool CBot :: select_CWeapon ( CWeapon *pWeapon )
 {
-	const CBotWeapon *pSelect = m_pWeapons->getWeapon(pWeapon);
-
-	if ( pSelect )
+	if ( const CBotWeapon *pSelect = m_pWeapons->getWeapon(pWeapon) )
 	{
-		const int id = pSelect->getWeaponIndex();
-
-		if ( id )
+		if ( const int id = pSelect->getWeaponIndex() )
 		{
 			failWeaponSelect();
 			selectWeapon(id);
@@ -3069,9 +3067,8 @@ void CBot :: getTasks (unsigned iIgnore)
 		return; // already got some tasks left
 
 	// roam
-	CWaypoint *pWaypoint = CWaypoints::getWaypoint(CWaypoints::randomFlaggedWaypoint(getTeam()));
 
-	if ( pWaypoint )
+	if ( CWaypoint *pWaypoint = CWaypoints::getWaypoint(CWaypoints::randomFlaggedWaypoint(getTeam())) )
 	{
 		m_pSchedules->add(new CBotGotoOriginSched(pWaypoint->getOrigin()));
 	}
@@ -3080,26 +3077,32 @@ void CBot :: getTasks (unsigned iIgnore)
 
 ///////////////////////
 
-bool CBots :: controlBot ( edict_t *pEdict )
+bool CBots::controlBot(edict_t* pEdict)
 {
-	CBotProfile *pBotProfile = CBotProfiles::getRandomFreeProfile();
+	CBotProfile* pBotProfile = CBotProfiles::getRandomFreeProfile();
 
-	if ( m_Bots[slotOfEdict(pEdict)]->getEdict() == pEdict )
+	const int slot = slotOfEdict(pEdict);
+	if (slot < 0) {
+		logger->Log(LogLevel::ERROR, "Invalid slot value");
+	}
+
+	const std::size_t slotIndex = static_cast<std::size_t>(slot);
+
+	if (m_Bots[static_cast<std::size_t>(slotIndex)]->getEdict() == pEdict)
 	{
 		return false;
 	}
-
-	if ( pBotProfile == nullptr)
+	if (pBotProfile == nullptr)
 	{
 		logger->Log(LogLevel::INFO, "No bot profiles are free, creating a default bot...");
 
 		pBotProfile = CBotProfiles::getDefaultProfile();
 
-		if ( pBotProfile == nullptr)
+		if (pBotProfile == nullptr)
 			return false;
 	}
 
-	m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile);
+	m_Bots[slotIndex]->createBotFromEdict(pEdict, pBotProfile);
 
 	return true;
 }
@@ -3107,25 +3110,33 @@ bool CBots :: controlBot ( edict_t *pEdict )
 #define SET_PROFILE_DATA_INT(varname,membername) if ( (varname) && *(varname) ) { pBotProfile->membername = std::atoi(varname); }
 #define SET_PROFILE_STRING(varname,localname,membername) if ( (varname) && *(varname) ) { (localname) = (char*)(varname); } else { (localname) = pBotProfile->membername; }
 
-bool CBots :: controlBot ( const char *szOldName, const char *szName, const char *szTeam, const char *szClass )
+bool CBots::controlBot(const char* szOldName, const char* szName, const char* szTeam, const char* szClass)
 {
-	edict_t *pEdict;
+	edict_t* pEdict;
 
-	const char *szOVName = "";
+	const char* szOVName = "";
 
-	if ( (pEdict = CBotGlobals::findPlayerByTruncName(szOldName)) == nullptr)
+	if ((pEdict = CBotGlobals::findPlayerByTruncName(szOldName)) == nullptr)
 	{
 		logger->Log(LogLevel::ERROR, "Can't find player");
 		return false;
 	}
 
-	if ( m_Bots[slotOfEdict(pEdict)]->getEdict() == pEdict )
+	const int slot = slotOfEdict(pEdict);
+
+	if (slot < 0) {
+		logger->Log(LogLevel::ERROR, "Invalid slot value");
+	}
+
+	const std::size_t botIndex = static_cast<std::size_t>(slot);
+
+	if (m_Bots[botIndex]->getEdict() == pEdict)
 	{
 		logger->Log(LogLevel::ERROR, "already controlling player");
 		return false;
 	}
 
-	if ( m_iMaxBots != -1 && CBotGlobals::numClients() >= m_iMaxBots )
+	if (m_iMaxBots != -1 && CBotGlobals::numClients() >= m_iMaxBots)
 	{
 		logger->Log(LogLevel::ERROR, "Can't create bot, max_bots reached");
 		return false;
@@ -3135,23 +3146,23 @@ bool CBots :: controlBot ( const char *szOldName, const char *szName, const char
 
 	CBotProfile* pBotProfile = CBotProfiles::getRandomFreeProfile();
 
-	if ( pBotProfile == nullptr)
+	if (pBotProfile == nullptr)
 	{
 		logger->Log(LogLevel::INFO, "No bot profiles are free, creating a default bot...");
 
 		pBotProfile = CBotProfiles::getDefaultProfile();
 
-		if ( pBotProfile == nullptr)
+		if (pBotProfile == nullptr)
 			return false;
 	}
-	
-	SET_PROFILE_DATA_INT(szClass,m_iClass)
-	SET_PROFILE_DATA_INT(szTeam,m_iTeam)
-	SET_PROFILE_STRING(szName,szOVName,m_szName)
+
+	SET_PROFILE_DATA_INT(szClass, m_iClass)
+	SET_PROFILE_DATA_INT(szTeam, m_iTeam)
+	SET_PROFILE_STRING(szName, szOVName, m_szName)
 
 	//IBotController *p = g_pBotManager->GetBotController(pEdict);	
 
-	return m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile);
+	return m_Bots[botIndex]->createBotFromEdict(pEdict, pBotProfile);
 }
 
 bool CBots :: createBot (const char *szClass, const char *szTeam, const char *szName)
@@ -3185,11 +3196,11 @@ bool CBots :: createBot (const char *szClass, const char *szTeam, const char *sz
 	if ( pEdict == nullptr)
 		return false;
 
-	return m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile);
+	return m_Bots[static_cast<std::size_t>(slotOfEdict(pEdict))]->createBotFromEdict(pEdict, pBotProfile);
 }
 
 int CBots::createDefaultBot(const char* szName) {
-	edict_t* pEdict = g_pBotManager->CreateBot( szName );
+	edict_t* pEdict = g_pBotManager->CreateBot(szName);
 
 	if (!pEdict) {
 		return -1;
@@ -3199,10 +3210,20 @@ int CBots::createDefaultBot(const char* szName) {
 	CBotProfile* pBotProfile = new CBotProfile(*CBotProfiles::getDefaultProfile());
 	pBotProfile->m_szName = CStrings::getString(szName);
 
-	const int slot = slotOfEdict(pEdict);
+	int slotInt = slotOfEdict(pEdict); // Get the slot as an int
+
+	if (slotInt < 0) {
+		// Handle invalid slot case
+		delete pBotProfile;
+
+		return -1;
+	}
+
+	std::size_t slot = static_cast<std::size_t>(slotInt); // Convert to std::size_t explicitly
+
 	m_Bots[slot]->createBotFromEdict(pEdict, pBotProfile);
 
-	return slot;
+	return slotInt; // Return the original int slot value
 }
 
 void CBots :: botFunction ( IBotFunction *function )
@@ -3405,28 +3426,33 @@ void CBots :: botThink ()
 	}
 }
 
-CBot *CBots :: getBotPointer (const edict_t *pEdict)
+CBot* CBots::getBotPointer(const edict_t* pEdict)
 {
-	if ( !pEdict )
+	if (!pEdict)
 		return nullptr;
 
 	const int slot = slotOfEdict(pEdict);
 
-	if ( slot < 0 || slot >= RCBOT_MAXPLAYERS )
+	if (slot < 0 || slot >= RCBOT_MAXPLAYERS)
 		return nullptr;
 
-	CBot *pBot = m_Bots[slot];
+	CBot* pBot = m_Bots[static_cast<unsigned>(slot)];
 
-	if ( pBot->inUse() )
+	if (pBot->inUse())
 		return pBot;
 
 	return nullptr;
 }
 
-CBot* CBots::getBot(const int slot) {
-	CBot *pBot = m_Bots[slot];
-	if ( pBot->inUse() )
+CBot* CBots::getBot(const int slot)
+{
+	if (slot < 0 || slot >= RCBOT_MAXPLAYERS)
+		return nullptr; //TODO: Experimental - Return nullptr for invalid slot values [APG]RoboCop[CL]
+	
+	CBot* pBot = m_Bots[static_cast<unsigned>(slot)];
+	if (pBot->inUse())
 		return pBot;
+
 	return nullptr;
 }
 
@@ -3481,7 +3507,7 @@ bool CBots :: needToAddBot ()
 {
 	const int iClients = CBotGlobals::numClients();
 
-	return m_iMinBots!=-1&&CBots::numBots() < m_iMinBots || iClients < m_iMaxBots&&m_iMaxBots!=-1;
+	return (m_iMinBots!=-1 && CBots::numBots() < m_iMinBots) || (iClients < m_iMaxBots && m_iMaxBots != -1);
 }
 
 bool CBots :: needToKickBot ()
@@ -3498,11 +3524,11 @@ bool CBots :: needToKickBot ()
 	return false;
 }
 
-void CBots :: kickRandomBot (const size_t count)
+void CBots :: kickRandomBot (const unsigned count)
 {
 	std::vector<int> botList;
 	//gather list of bots
-	for ( size_t i = 0; i < RCBOT_MAXPLAYERS; i ++ )
+	for ( unsigned i = 0; i < RCBOT_MAXPLAYERS; i ++ )
 	{
 		if ( m_Bots[i]->inUse() )
 			botList.emplace_back(m_Bots[i]->getPlayerID());
@@ -3523,7 +3549,7 @@ void CBots :: kickRandomBot (const size_t count)
 	//std::mt19937 g(rd());
 	//std::shuffle(botList.begin(), botList.end(), g);
 
-	size_t numBotsKicked = 0;
+	unsigned numBotsKicked = 0;
 	while (numBotsKicked < count && !botList.empty()) {
 		char szCommand[512];
 
@@ -3537,26 +3563,31 @@ void CBots :: kickRandomBot (const size_t count)
 	m_flAddKickBotTime = engine->Time() + 2.0f;
 }
 
-void CBots :: kickRandomBotOnTeam (const int team)
+void CBots::kickRandomBotOnTeam(const int team)
 {
 	std::vector<int> botList;
 	char szCommand[512];
+
 	//gather list of bots
-	for ( short int i = 0; i < RCBOT_MAXPLAYERS; i ++ )
+	for (short int i = 0; i < RCBOT_MAXPLAYERS; i++)
 	{
-		if ( m_Bots[i]->inUse() && m_Bots[i]->getTeam() == team )
+		if (m_Bots[i]->inUse() && m_Bots[i]->getTeam() == team)
 		{
 			botList.emplace_back(m_Bots[i]->getPlayerID());
 		}
 	}
 
-	if ( botList.empty() )
+	if (botList.empty())
 	{
 		logger->Log(LogLevel::DEBUG, "kickRandomBotOnTeam() : No bots to kick");
 		return;
 	}
 
-	snprintf(szCommand, sizeof(szCommand), "kickid %d\n", botList[ randomInt(0, botList.size() - 1) ]);
+	const std::size_t botListSize = botList.size(); // Use std::size_t for size
+
+	if (botListSize > 0) {
+		snprintf(szCommand, sizeof(szCommand), "kickid %d\n", botList[static_cast<std::size_t>(randomInt(0, static_cast<int>(botListSize) - 1))]);
+	}
 
 	m_flAddKickBotTime = engine->Time() + 2.0f;
 

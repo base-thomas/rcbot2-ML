@@ -54,9 +54,9 @@ public:
 
 	void setVector (const std::vector<float>& values);
 
-	float get ( int iIndex ) const;
+	float get (std::size_t iIndex) const;
 
-	void set ( int iIndex, float fVal );
+	void set (std::size_t iIndex, float fVal);
 
 	void clear ();
 

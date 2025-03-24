@@ -365,7 +365,7 @@ public:
 		if (std::strlen(szWeaponName) > std::strlen(m_szWeaponName))
 			return false;
 
-		const size_t start = std::strlen(m_szWeaponName) - std::strlen(szWeaponName);
+		const std::size_t start = std::strlen(m_szWeaponName) - std::strlen(szWeaponName);
 
 		return std::strcmp(&m_szWeaponName[start], szWeaponName) == 0;
 	}
@@ -858,7 +858,7 @@ private:
 	CBot* m_pBot;
 
 	// checksum mask of weapons bot already has so we know if we need to update or not
-	uintptr_t m_iWeaponsSignature;
+	std::uintptr_t m_iWeaponsSignature;
 
 	// weapons local to the bot only
 	// (holds ammo/preference etc and link to actual weapon)

@@ -6,7 +6,7 @@
 struct DynLibInfo
 {
 	void *baseAddress;
-	size_t memorySize;
+	std::size_t memorySize;
 };
 
 class CRCBotKeyValueList;
@@ -16,11 +16,11 @@ class CSignatureFunction
 public:
 	CSignatureFunction() { m_func = nullptr; }
 private:
-	static size_t decodeHexString(unsigned char *buffer, size_t maxlength, const char *hexstr);
+	static std::size_t decodeHexString(unsigned char *buffer, std::size_t maxlength, const char *hexstr);
 
 	static bool getLibraryInfo(const void *libPtr, DynLibInfo &lib);
 
-	void *findPattern(const void *libPtr, const char *pattern, size_t len);
+	void *findPattern(const void *libPtr, const char *pattern, std::size_t len);
 
 	void *findSignature (const void* addrInBase, const char* signature);
 protected:

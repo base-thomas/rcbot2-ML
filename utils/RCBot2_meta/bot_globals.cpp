@@ -56,9 +56,9 @@
 #include <memory>
 
 //caxanga334: SDK 2013 contains macros for std::min and std::max which causes errors when compiling
-#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
+//#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
 #include "valve_minmax_off.h"
-#endif
+//#endif
 
 extern IServerGameEnts *servergameents;
 
@@ -170,7 +170,7 @@ int CBotGlobals ::numPlayersOnTeam(const int iTeam, const bool bAliveOnly)
 
 bool CBotGlobals::dirExists(const char *path)
 {
-#ifdef _WIN32
+#if defined(_WIN64) || defined(_WIN32)
 
 	struct _stat info;
 
@@ -263,7 +263,7 @@ edict_t *CBotGlobals :: findPlayerByTruncName ( const char *name )
 // find a player by a truncated name "name".
 // e.g. name = "Jo" might find a player called "John"
 {
-	const size_t length = std::strlen(name);
+	const std::size_t length = std::strlen(name);
 	for( int i = 1; i <= maxClients(); i ++ )
 	{
 		edict_t* pent = INDEXENT(i);
@@ -482,15 +482,15 @@ float CBotGlobals :: DotProductFromOrigin (const Vector& vPlayer, const Vector& 
 
 bool CBotGlobals :: traceVisible (edict_t *pEnt)
 {
-	return m_TraceResult.fraction >= 1.0f || m_TraceResult.m_pEnt && pEnt && m_TraceResult.m_pEnt == pEnt->GetUnknown()->GetBaseEntity();
+	return m_TraceResult.fraction >= 1.0f || (m_TraceResult.m_pEnt && pEnt && m_TraceResult.m_pEnt == pEnt->GetUnknown()->GetBaseEntity());
 }
 
 bool CBotGlobals::initModFolder() {
 	char szGameFolder[512];
 	engine->GetGameDir(szGameFolder, 512);
 
-	const size_t iLength = std::strlen(CStrings::getString(szGameFolder));
-	size_t pos = iLength - 1;
+	const std::size_t iLength = std::strlen(CStrings::getString(szGameFolder));
+	std::size_t pos = iLength - 1;
 
 	while (pos > 0 && szGameFolder[pos] != '\\' && szGameFolder[pos] != '/') {
 		pos--;
@@ -512,9 +512,9 @@ bool CBotGlobals :: gameStart ()
 */
 	//filesystem->GetCurrentDirectory(szSteamFolder,512);
 
-	const size_t iLength = std::strlen(CStrings::getString(szGameFolder));
+	const std::size_t iLength = std::strlen(CStrings::getString(szGameFolder));
 
-	size_t pos = iLength - 1;
+	std::size_t pos = iLength - 1;
 
 	while ( pos > 0 && szGameFolder[pos] != '\\' && szGameFolder[pos] != '/' )
 	{
@@ -822,8 +822,8 @@ bool CBotGlobals :: boundingBoxTouch2d ( const Vector2D &a1, const Vector2D &a2,
 	const Vector2D amins = Vector2D(std::min(a1.x, a2.x), std::min(a1.y, a2.y));
 	const Vector2D amaxs = Vector2D(std::max(a1.x, a2.x), std::max(a1.y, a2.y));
 
-	return bmins.x >= amins.x && bmins.y >= amins.y && (bmins.x <= amaxs.x && bmins.y <= amaxs.y) ||
-		bmaxs.x >= amins.x && bmaxs.y >= amins.y && (bmaxs.x <= amaxs.x && bmaxs.y <= amaxs.y);
+	return (bmins.x >= amins.x && bmins.y >= amins.y && (bmins.x <= amaxs.x && bmins.y <= amaxs.y)) ||
+		(bmaxs.x >= amins.x && bmaxs.y >= amins.y && (bmaxs.x <= amaxs.x && bmaxs.y <= amaxs.y));
 }
 
 bool CBotGlobals :: boundingBoxTouch3d ( const Vector &a1, const Vector &a2,
@@ -832,8 +832,8 @@ bool CBotGlobals :: boundingBoxTouch3d ( const Vector &a1, const Vector &a2,
 	const Vector amins = Vector(std::min(a1.x, a2.x), std::min(a1.y, a2.y), std::min(a1.z, a2.z));
 	const Vector amaxs = Vector(std::max(a1.x, a2.x), std::max(a1.y, a2.y), std::max(a1.z, a2.z));
 
-	return bmins.x >= amins.x && bmins.y >= amins.y && bmins.z >= amins.z && (bmins.x <= amaxs.x && bmins.y <= amaxs.y && bmins.z <= amaxs.z) ||
-		bmaxs.x >= amins.x && bmaxs.y >= amins.y && bmaxs.z >= amins.z && (bmaxs.x <= amaxs.x && bmaxs.y <= amaxs.y && bmaxs.z <= amaxs.z);	
+	return (bmins.x >= amins.x && bmins.y >= amins.y && bmins.z >= amins.z && (bmins.x <= amaxs.x && bmins.y <= amaxs.y && bmins.z <= amaxs.z)) ||
+		(bmaxs.x >= amins.x && bmaxs.y >= amins.y && bmaxs.z >= amins.z && (bmaxs.x <= amaxs.x && bmaxs.y <= amaxs.y && bmaxs.z <= amaxs.z));	
 }
 bool CBotGlobals :: onOppositeSides2d (
 		const Vector2D &amins, const Vector2D &amaxs,
@@ -886,15 +886,15 @@ void CBotGlobals :: botMessage ( edict_t *pEntity, const int iErr, const char *f
 	va_end (argptr); 
 
 	const char *bot_tag = BOT_TAG;
-	const size_t len = std::strlen(string);
-	const size_t taglen = std::strlen(BOT_TAG);
+	const std::size_t len = std::strlen(string);
+	const std::size_t taglen = std::strlen(BOT_TAG);
 	// add tag -- push tag into string
-	for ( unsigned i = len + taglen; i >= taglen; i -- )
+	for ( std::size_t i = len + taglen; i >= taglen; i -- )
 		string[i] = string[i-taglen];
 
 	string[len+taglen+1] = 0;
 
-	for ( unsigned i = 0; i < taglen; i ++ )
+	for ( std::size_t i = 0; i < taglen; i ++ )
 		string[i] = bot_tag[i];
 
 	std::strcat(string,"\n");
@@ -907,10 +907,10 @@ void CBotGlobals :: botMessage ( edict_t *pEntity, const int iErr, const char *f
 	{
 		if ( iErr )
 		{
-			Warning(string);
+			Warning("%s", string);
 		}
 		else
-			Msg(string);
+			Msg("%s", string);
 	}
 }
 
@@ -924,12 +924,12 @@ bool CBotGlobals :: makeFolders (const char* szFile)
 #endif
 
 	char szFolderName[1024];
-	unsigned folderNameSize = 0;
+	std::size_t folderNameSize = 0;
 	szFolderName[0] = 0;
 
-	const size_t iLen = std::strlen(szFile);
+	const std::size_t iLen = std::strlen(szFile);
 
-	size_t i = 0;
+	std::size_t i = 0;
 
 	while ( i < iLen )
 	{
@@ -1088,7 +1088,7 @@ void CBotGlobals :: buildFileName ( char *szOutput, const char *szFile, const ch
 			std::strcpy(home,".");
 #endif
 
-#if defined(HOMEFOLDER) && defined(WIN32)
+#if defined(HOMEFOLDER) && defined(_WIN64) 
 		ExpandEnvironmentStringsA("%userprofile%", home, 511);
 #endif
 
@@ -1106,9 +1106,7 @@ void CBotGlobals :: buildFileName ( char *szOutput, const char *szFile, const ch
 	else
 		std::strcpy(szOutput, m_szRCBotFolder);
 
-	const size_t len = std::strlen(szOutput);
-
-	if (len > 0 && szOutput[len - 1] != '\\' && szOutput[len - 1] != '/')
+	if (const std::size_t len = std::strlen(szOutput); len > 0 && szOutput[len - 1] != '\\' && szOutput[len - 1] != '/')
 		addDirectoryDelimiter(szOutput);
 
 	if ( szFolder )

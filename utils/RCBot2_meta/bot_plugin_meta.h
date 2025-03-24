@@ -58,17 +58,17 @@
 class CUserCmd;
 class IMoveHelper;
 
-#if defined WIN32 && !defined snprintf
+#if defined(_WIN64) || defined(_WIN32) && !defined snprintf
 #define snprintf _snprintf
 #endif
 
 class RCBotPluginMeta : public ISmmPlugin, public IMetamodListener
 {
 public:
-	bool Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late) override;
-	bool Unload(char *error, size_t maxlen) override;
-	bool Pause(char *error, size_t maxlen) override;
-	bool Unpause(char *error, size_t maxlen) override;
+	bool Load(PluginId id, ISmmAPI *ismm, char *error, std::size_t maxlen, bool late) override;
+	bool Unload(char *error, std::size_t maxlen) override;
+	bool Pause(char *error, std::size_t maxlen) override;
+	bool Unpause(char *error, std::size_t maxlen) override;
 	void AllPluginsLoaded() override;
 //public: //IMetamodListener stuff
 	void OnVSPListening(IServerPluginCallbacks *iface) override;

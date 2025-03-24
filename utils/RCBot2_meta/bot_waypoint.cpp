@@ -63,9 +63,9 @@
 #include <vector>    //bir3yk
 
  //caxanga334: SDK 2013 contains macros for std::min and std::max which causes errors when compiling
-#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
+//#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
 #include "valve_minmax_off.h"
-#endif
+//#endif
 
 int CWaypoints::m_iNumWaypoints = 0;
 CWaypoint CWaypoints::m_theWaypoints[MAX_WAYPOINTS];
@@ -135,8 +135,8 @@ bool CWaypointNavigator :: beliefLoad ()
 
    bfp.seekg(0, std::fstream::end); // seek at end
 
-	const unsigned iSize = bfp.tellg(); // get file size
-	const unsigned iDesiredSize = CWaypoints::numWaypoints() * sizeof(unsigned short int);
+	const std::size_t iSize = bfp.tellg(); // get file size
+	const std::size_t iDesiredSize = static_cast<std::size_t>(CWaypoints::numWaypoints()) * sizeof(unsigned short int);
 
    // size not right, return false to re workout table
    if ( iSize != iDesiredSize )
@@ -186,8 +186,8 @@ bool CWaypointNavigator :: beliefSave (const bool bOverride)
    {
 	   bfp.seekg(0, std::fstream::end); // seek at end
 
-	   const unsigned iSize = bfp.tellg(); // get file size
-	   const unsigned iDesiredSize = CWaypoints::numWaypoints() * sizeof(unsigned short int);
+	   const std::size_t iSize = bfp.tellg(); // get file size
+	   const std::size_t iDesiredSize = static_cast<std::size_t>(CWaypoints::numWaypoints()) * sizeof(unsigned short int);
 		
 	   // size not right, return false to re workout table
 	   if ( iSize == iDesiredSize )
@@ -409,8 +409,8 @@ CWaypoint *CWaypointNavigator :: chooseBestFromBeliefBetweenAreas ( const std::v
 				}
 			}
 
-			if ( pWpt == nullptr)
-				pWpt = CWaypoints::getWaypoint(goals[randomInt(0, static_cast<int>(goals.size()) - 1)]->getWaypoint());
+			if (!goals.empty() && pWpt == nullptr)
+				pWpt = CWaypoints::getWaypoint(goals[static_cast<std::size_t>(randomInt(0, static_cast<int>(goals.size()) - 1))]->getWaypoint());
 		}
 	}
 		
@@ -576,8 +576,8 @@ CWaypoint *CWaypointNavigator :: chooseBestFromBelief ( const std::vector<CWaypo
 				}
 			}
 
-			if ( pWpt == nullptr)
-				pWpt = goals[randomInt(0, static_cast<int>(goals.size()) - 1)];
+			if (!goals.empty() && pWpt == nullptr)
+				pWpt = goals[static_cast<std::size_t>(randomInt(0, static_cast<int>(goals.size()) - 1))];
 		}
 	}
 		
@@ -1208,9 +1208,7 @@ bool CWaypointNavigator :: getNextRoutePoint ( Vector *vPoint )
 {
 	if ( !m_currentRoute.empty() )
 	{
-		const int head = m_currentRoute.top();
-
-		if (head)
+		if (const int head = m_currentRoute.top())
 		{
 			static CWaypoint *pW;
 			pW = CWaypoints::getWaypoint(head);
@@ -1315,9 +1313,7 @@ void CWaypointNavigator :: updatePosition ()
 
 			// Bot passed into this waypoint safely, update belief
 
-			const bot_statistics_t *stats = m_pBot->getStats();
-
-			if ( stats )
+			if ( const bot_statistics_t *stats = m_pBot->getStats() )
 			{
 				if ( stats->stats.m_iEnemiesVisible > stats->stats.m_iTeamMatesVisible && stats->stats.m_iEnemiesInRange>0 )
 					beliefOne(iWaypointID,BELIEF_DANGER,100.0f);
@@ -2036,10 +2032,8 @@ void CWaypoints :: drawWaypoints( CClient *pClient )
 
 	if ( pClient->isPathWaypointOn() )
 	{
-		const CWaypoint* pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
 		// valid waypoint
-		if ( pWpt )
+		if ( const CWaypoint* pWpt = getWaypoint(pClient->currentWaypoint()) )
 			pWpt->drawPaths(pClient->getPlayer(),pClient->getDrawType());
 	}
 }
@@ -2068,7 +2062,7 @@ void CWaypoints :: init (const char *pszAuthor, const char *pszModifiedBy)
 	for (CWaypoint& m_theWaypoint : m_theWaypoints)
 		m_theWaypoint.init();
 
-	Q_memset(m_theWaypoints,0,sizeof(CWaypoint)*MAX_WAYPOINTS);	
+	Q_memset(m_theWaypoints, 0, sizeof(CWaypoint) * MAX_WAYPOINTS);
 
 	CWaypointLocations::Init();
 	CWaypointDistances::reset();
@@ -2166,34 +2160,30 @@ int CWaypoints::getClosestFlagged(const int iFlags, const Vector& vOrigin, const
 	float fDist = 8192.0f;
 	float distance;
 	int iwpt = -1;
-	const int iFrom = CWaypointLocations::NearestWaypoint(vOrigin,fDist,-1,true,false,true, nullptr,false,iTeam);
+	const int iFrom = CWaypointLocations::NearestWaypoint(vOrigin, fDist, -1, true, false, true, nullptr, false, iTeam);
 
-	CBotMod *pCurrentMod = CBotGlobals::getCurrentMod();
-
-	for ( int i = 0; i < iSize; i ++ )
+	CBotMod* pCurrentMod = CBotGlobals::getCurrentMod();
+	for (int i = 0; i < static_cast<int>(iSize); i++)
 	{
 		CWaypoint* pWpt = &m_theWaypoints[i];
-
-		if ( i == iFrom )
+		if (i == static_cast<int>(iFrom))
 			continue;
-
-		if ( failedwpts[i] == 1 )
+		if (failedwpts[i] == 1)
 			continue;
-
-		if ( pWpt->isUsed() && pWpt->forTeam(iTeam) )
+		if (pWpt->isUsed() && pWpt->forTeam(iTeam))
 		{
-			if ( pWpt->hasFlag(iFlags) )
+			if (pWpt->hasFlag(iFlags))
 			{
 				// BUG FIX for DOD:S 
-				if (!pCurrentMod->isWaypointAreaValid(pWpt->getArea(), iFlags)) // CTeamFortress2Mod::m_ObjectiveResource.isWaypointAreaValid(pWpt->getArea()) )
+				if (!pCurrentMod->isWaypointAreaValid(pWpt->getArea(), iFlags))
 					continue;
 
-				if ( iFrom == -1 )
-					distance = (pWpt->getOrigin()-vOrigin).Length();
+				if (iFrom == -1)
+					distance = (pWpt->getOrigin() - vOrigin).Length();
 				else
-					distance = CWaypointDistances::getDistance(iFrom,i);
+					distance = CWaypointDistances::getDistance(iFrom, i);
 
-				if ( distance < fDist)
+				if (distance < fDist)
 				{
 					fDist = distance;
 					iwpt = i;
@@ -2218,18 +2208,18 @@ void CWaypoints :: deletePathsTo (const int iWpt)
 	// this will go into an evil loop unless we do this first
 	// and use a temporary copy as a side effect of performing
 	// a remove will affect the original array
-	for ( int i = 0; i < iNumPathsTo; i ++ )
+	for (std::size_t i = 0; i < static_cast<std::size_t>(iNumPathsTo); i++)
 	{
-		pathsTo.emplace_back(pWaypoint->getPathToThisWaypoint(i));
+		pathsTo.emplace_back(pWaypoint->getPathToThisWaypoint(static_cast<int>(i)));
 	}
 
 	iNumPathsTo = static_cast<int>(pathsTo.size());
 
-	for ( int i = 0; i < iNumPathsTo; i ++ )
+	for (std::size_t i = 0; i < static_cast<std::size_t>(iNumPathsTo); i++)
 	{
 		const int iOther = pathsTo[i];
 
-		CWaypoint *pOther = getWaypoint(iOther);
+		CWaypoint* pOther = getWaypoint(iOther);
 
 		pOther->removePathTo(iWpt);
 	}
@@ -2318,9 +2308,7 @@ int CWaypoints :: addWaypoint ( CClient *pClient, const char *type1, const char 
 
 	if ( rcbot_wpt_autotype.GetInt() && (!bUseTemplate || rcbot_wpt_autotype.GetInt()==2) )
 	{
-		IPlayerInfo *pPlayerInfo = playerinfomanager->GetPlayerInfo(pClient->getPlayer());
-
-		if ( pPlayerInfo )
+		if ( IPlayerInfo *pPlayerInfo = playerinfomanager->GetPlayerInfo(pClient->getPlayer()) )
 		{
 			if ( pPlayerInfo->GetLastUserCommand().buttons & IN_DUCK )
 				iFlags |= CWaypointTypes::W_FL_CROUCH;
@@ -2328,9 +2316,7 @@ int CWaypoints :: addWaypoint ( CClient *pClient, const char *type1, const char 
 
 		for ( int i = 0; i < gpGlobals->maxEntities; i ++ )
 		{
-			edict_t* pEdict = INDEXENT(i);
-
-			if ( pEdict )
+			if ( edict_t* pEdict = INDEXENT(i) )
 			{
 				if ( !pEdict->IsFree() )
 				{
@@ -2674,7 +2660,6 @@ CWaypoint* CWaypoints::randomWaypointGoalNearestArea(const int iFlags, const int
 													 const CBot* pBot, const bool bHighDanger, const Vector* origin,
 													 const int iIgnore, const bool bIgnoreBelief, int iWpt1)
 {
-	int i;
 	static int size; 
 	CWaypoint *pWpt;
 	AStarNode *node;
@@ -2690,7 +2675,7 @@ CWaypoint* CWaypoints::randomWaypointGoalNearestArea(const int iFlags, const int
 	if ( iWpt1 == -1 )
 	   iWpt1 = CWaypointLocations::NearestWaypoint(*origin,200.0f,-1);
 
-	for ( i = 0; i < size; i ++ )
+	for ( int i = 0; i < size; i ++ )
 	{
 		if ( i == iIgnore )
 			continue;
@@ -2736,18 +2721,20 @@ CWaypoint* CWaypoints::randomWaypointGoalNearestArea(const int iFlags, const int
 		if ( pBot )
 		{
 			const CWaypointNavigator* pNav = static_cast<CWaypointNavigator*>(pBot->getNavigator());
-
-			pWpt = pNav->chooseBestFromBeliefBetweenAreas(goals,bHighDanger,bIgnoreBelief);
+			pWpt = pNav->chooseBestFromBeliefBetweenAreas(goals, bHighDanger, bIgnoreBelief);
 		}
 		else
-			pWpt = CWaypoints::getWaypoint(goals[randomInt(0, static_cast<int>(goals.size()) - 1)]->getWaypoint());
-
+		{
+			// Ensure the index is of type std::size_t
+			std::size_t randomIndex = static_cast<std::size_t>(randomInt(0, static_cast<int>(goals.size()) - 1));
+			pWpt = CWaypoints::getWaypoint(goals[randomIndex]->getWaypoint());
+		}
 		//pWpt = goals.Random();
 	}
 
-	for ( i = 0; i < static_cast<int>(goals.size()); i ++ )
+	for (AStarNode* const& goal : goals)
 	{
-		node = goals[i];
+		node = goal;
 		delete node;
 	}
 
@@ -2820,7 +2807,9 @@ CWaypoint* CWaypoints::randomWaypointGoalBetweenArea(const int iFlags, const int
 			pWpt = pNav->chooseBestFromBeliefBetweenAreas(goals, bHighDanger, bIgnoreBelief);
 		}
 		else
-			pWpt = CWaypoints::getWaypoint(goals[randomInt(0, static_cast<int>(goals.size()))]->getWaypoint());
+		{
+			pWpt = CWaypoints::getWaypoint(goals[static_cast<std::size_t>(randomInt(0, static_cast<int>(goals.size())))]->getWaypoint());
+		}
 
 		//pWpt = goals.Random();
 	}
@@ -2878,8 +2867,11 @@ CWaypoint* CWaypoints::randomWaypointGoal(const int iFlags, const int iTeam, con
 			pWpt = pNav->chooseBestFromBelief(goals, bHighDanger, iSearchFlags);
 		}
 		else
-			pWpt = goals[randomInt(0, static_cast<int>(goals.size()) - 1)];
+		{
+			pWpt = goals[static_cast<std::size_t>(randomInt(0, static_cast<int>(goals.size()) - 1))];
+		}
 	}
+
 	return pWpt;
 }
 
@@ -2943,7 +2935,7 @@ int CWaypoint :: numPaths () const
 
 int CWaypoint :: getPath (const int i) const
 {
-	return m_thePaths[i];
+	return m_thePaths[static_cast<std::size_t>(i)];
 }
 
 bool CWaypoint :: isPathOpened (const Vector& vPath)
@@ -2991,7 +2983,7 @@ int CWaypoint :: numPathsToThisWaypoint () const
 
 int CWaypoint :: getPathToThisWaypoint (const int i) const
 {
-	return m_PathsTo[i];
+	return m_PathsTo[static_cast<std::size_t>(i)];
 }
 
 bool CWaypoint :: addPathTo ( int iWaypointIndex )
@@ -3084,12 +3076,13 @@ void CWaypointTypes:: addType ( CWaypointType *type )
 	m_Types.emplace_back(type);
 }
 
-CWaypointType *CWaypointTypes :: getTypeByIndex (const unsigned iIndex)
+CWaypointType *CWaypointTypes :: getTypeByIndex (const std::size_t iIndex)
 {
 	if ( iIndex < m_Types.size() )
 	{
-		return m_Types[iIndex];
+		return m_Types[static_cast<std::size_t>(iIndex)];
 	}
+
 	return nullptr;
 }
 

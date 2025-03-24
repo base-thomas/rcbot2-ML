@@ -41,7 +41,7 @@
 #include "rcbot/logging.h"
 
 std::vector <char *> CBotConfigFile::m_Commands;
-unsigned CBotConfigFile::m_iCmd = 0; // current command (time delayed)
+std::size_t CBotConfigFile::m_iCmd = 0; // current command (time delayed)
 float CBotConfigFile::m_fNextCommandTime = 0.0f;
 
 // 
@@ -69,7 +69,7 @@ void CBotConfigFile::load()
 		if ( line[0] == '#' )
             continue;
 
-		size_t len = std::strlen(line);
+		std::size_t len = std::strlen(line);
 
 		if (len && line[len-1] == '\n') {
 			line[--len] = '\0';
@@ -89,14 +89,15 @@ void CBotConfigFile::load()
 
 void CBotConfigFile::doNextCommand()
 {
-    if (m_fNextCommandTime < engine->Time() && m_iCmd < m_Commands.size())
+    if (m_fNextCommandTime < engine->Time() &&
+        m_iCmd < m_Commands.size())
     {
         char cmd[64] = {};
-		snprintf(cmd, sizeof cmd, "%s\n", m_Commands[m_iCmd]);
+        snprintf(cmd, sizeof(cmd), "%s\n", m_Commands[m_iCmd]);
         engine->ServerCommand(cmd);
 
-		logger->Log(LogLevel::TRACE, "Bot Command '%s' executed", m_Commands[m_iCmd]);
-		m_iCmd++;
+        logger->Log(LogLevel::TRACE, "Bot Command '%s' executed", m_Commands[m_iCmd]);
+        m_iCmd++;
         m_fNextCommandTime = engine->Time() + 0.1f;
     }
 }
@@ -106,11 +107,11 @@ void CBotConfigFile::executeCommands()
     while (m_iCmd < m_Commands.size())
     {
         char cmd[64] = {};
-		snprintf(cmd, sizeof cmd, "%s\n", m_Commands[m_iCmd]);
+        snprintf(cmd, sizeof(cmd), "%s\n", m_Commands[m_iCmd]); // Directly use m_Commands[m_iCmd] as it is a char*
         engine->ServerCommand(cmd);
 
-		logger->Log(LogLevel::TRACE, "Bot Command '%s' executed", m_Commands[m_iCmd]);
-		m_iCmd++;
+        logger->Log(LogLevel::TRACE, "Bot Command '%s' executed", m_Commands[m_iCmd]); // Directly use m_Commands[m_iCmd]
+        m_iCmd++;
     }
 
     engine->ServerExecute();

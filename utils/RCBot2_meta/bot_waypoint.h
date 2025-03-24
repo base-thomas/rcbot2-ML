@@ -210,9 +210,9 @@ public:
 
     static WptColor getColour(int iFlags);
 
-    static CWaypointType *getTypeByIndex(unsigned iIndex);
+    static CWaypointType *getTypeByIndex(std::size_t iIndex);
 
-    static unsigned getNumTypes();
+    static std::size_t getNumTypes();
 
     static CWaypointType *getTypeByFlags(int iFlags);
 
@@ -251,10 +251,9 @@ public:
 	}
 
 	CWaypoint(const Vector& vOrigin, const int iFlags = 0, const int iYaw = 0)
-		: m_vOrigin(vOrigin), m_iFlags(iFlags)
 	{
 		m_thePaths.clear();
-		init();
+		init(); // this function resets a bunch of variables that are manually set again below - caxanga334
 		m_bUsed = true;
 		setAim(iYaw);
 		m_fNextCheckGroundTime = 0.0f;
@@ -263,6 +262,8 @@ public:
 		m_OpensLaterInfo.clear();
 		m_bIsReachable = true;
 		m_fCheckReachableTime = 0.0f;
+		m_vOrigin = vOrigin;
+		m_iFlags = iFlags;
 		//m_iId = iId;
 	}
 
@@ -418,8 +419,8 @@ private:
 class CWaypoints
 {
 public:
-	static constexpr int MAX_WAYPOINTS = 1024;
-	static constexpr int WAYPOINT_VERSION = 4; // waypoint version 4 add author information
+	static constexpr int MAX_WAYPOINTS = 2048;
+	static constexpr int WAYPOINT_VERSION = 5; // waypoint version 5 add author information
 
 	static constexpr int W_FILE_FL_VISIBILITY = 1;
 
@@ -438,7 +439,7 @@ public:
 		// return ((int)pWpt - (int)m_theWaypoints)/sizeof(CWaypoint);
 
 		// This will probably not work -caxanga334
-		return static_cast<int>((reinterpret_cast<intptr_t>(pWpt) - reinterpret_cast<intptr_t>(m_theWaypoints)) / sizeof(CWaypoint));
+		return static_cast<int>((reinterpret_cast<std::intptr_t>(pWpt) - reinterpret_cast<std::intptr_t>(m_theWaypoints)) / sizeof(CWaypoint));
 	}
 
 	static void autoFix(bool bAutoFixNonArea);

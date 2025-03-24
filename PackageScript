@@ -16,6 +16,11 @@ folder_list = [
   'addons/rcbot2/waypoints',
 ]
 
+if 'x86_64' in MMS.target_archs:
+  folder_list.extend([
+    'addons/rcbot2/bin/x64',
+  ])
+
 # Create the distribution folder hierarchy.
 folder_map = {}
 for folder in folder_list:
@@ -51,13 +56,8 @@ CopyFiles('package/config', 'addons/rcbot2/config',
 
 # Copy binaries.
 for cxx_task in MMS.binaries:
-  builder.AddCopy(cxx_task.binary, folder_map['addons/rcbot2/bin'])
-
-# TODO: 64-Bit support # Copy binaries.
-#for cxx_task in MMS.mms_plugins:
-#  if cxx_task.target.arch == 'x86_64':
-#  # mms expects our loader (RCBot2Meta) to exist in /bin/
-#  if cxx_task.target.arch == 'x86_64' and not 'RCBot2Meta' in cxx_task.binary.path:
-#    builder.AddCopy(cxx_task.binary, folder_map['addons/rcbot2/bin/x64'])
-#  else:
-#    builder.AddCopy(cxx_task.binary, folder_map['addons/rcbot2/bin'])
+  # mms expects our loader (RCBot2Meta) to exist in /bin/
+  if cxx_task.target.arch == 'x86_64' and not 'RCBot2Meta' in cxx_task.binary.path:
+    builder.AddCopy(cxx_task.binary, folder_map['addons/rcbot2/bin/x64'])
+  else:
+    builder.AddCopy(cxx_task.binary, folder_map['addons/rcbot2/bin'])

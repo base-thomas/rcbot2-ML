@@ -376,10 +376,10 @@ std::vector<CWeapon*> CWeapons::m_theWeapons;
 int CBotWeapon::getAmmo(const CBot* pBot, const int type) const
 {
 	if (type == AMMO_PRIM)
-		return pBot->getAmmo(m_pWeaponInfo->getAmmoIndex1());
+		return pBot->getAmmo(static_cast<std::size_t>(m_pWeaponInfo->getAmmoIndex1()));
 
 	if (type == AMMO_SEC)
-		return pBot->getAmmo(m_pWeaponInfo->getAmmoIndex2());
+		return pBot->getAmmo(static_cast<std::size_t>(m_pWeaponInfo->getAmmoIndex2()));
 
 	return 0;
 }
@@ -444,7 +444,7 @@ edict_t* CWeapons::findWeapon(edict_t* pPlayer, const char* szWeaponName)
 
 bool CBotWeapons::update(const bool bOverrideAllFromEngine)
 {
-	uintptr_t iWeaponsSignature = 0x0; // check sum of weapons
+	std::uintptr_t iWeaponsSignature = 0x0; // check sum of weapons
 	edict_t* pWeapon;
 
 	const CBaseHandle* m_Weapons = CClassInterface::getWeaponList(m_pBot->getEdict());
@@ -454,7 +454,9 @@ bool CBotWeapons::update(const bool bOverrideAllFromEngine)
 	{
 		// create a 'hash' of current weapons
 		pWeapon = m_Weapon_iter == nullptr ? nullptr : INDEXENT(m_Weapon_iter->GetEntryIndex());
-		iWeaponsSignature += (reinterpret_cast<uintptr_t>(pWeapon)) + ((pWeapon == nullptr) ? 0 : static_cast<unsigned>(CClassInterface::getWeaponState(pWeapon)));
+		iWeaponsSignature += reinterpret_cast<std::uintptr_t>(pWeapon) +
+			static_cast<std::uintptr_t>(pWeapon == nullptr ? 0 : static_cast<unsigned>(CClassInterface::getWeaponState(pWeapon)));
+
 		if (m_Weapon_iter != nullptr) {
 			m_Weapon_iter++;
 		}
@@ -813,7 +815,7 @@ constexpr std::array<const char*, 21> g_szWeaponFlags = {
 
 std::unordered_map<std::string, int> createWeaponFlagMap() {
 	std::unordered_map<std::string, int> flagMap;
-	for (size_t i = 0; i < g_szWeaponFlags.size(); ++i) {
+	for (std::size_t i = 0; i < g_szWeaponFlags.size(); ++i) {
 		flagMap[g_szWeaponFlags[i]] = 1 << i;
 	}
 	return flagMap;
@@ -835,15 +837,13 @@ void CWeapons::loadWeapons(const char* szWeaponListName, const WeaponsData_t* pD
 		CBotGlobals::buildFileName(szFilename, "weapons", BOT_CONFIG_FOLDER, "ini", false);
 
 		if (kv && kv->LoadFromFile(filesystem, szFilename, nullptr)) {
-			KeyValues* weaponListKey = kv->FindKey(szWeaponListName);
+			if (KeyValues* weaponListKey = kv->FindKey(szWeaponListName)) {
 
-			if (weaponListKey) {
 				for (KeyValues* subKey = weaponListKey->GetFirstSubKey(); subKey != nullptr; subKey = subKey->GetNextTrueSubKey()) {
 					WeaponsData_t newWeapon;
 					std::memset(&newWeapon, 0, sizeof(WeaponsData_t));
 
-					const char* szKeyName = subKey->GetName();
-					if (szKeyName) {
+					if (const char* szKeyName = subKey->GetName()) {
 						std::string lowered(szKeyName);
 						std::transform(lowered.begin(), lowered.end(), lowered.begin(), ::tolower);
 
@@ -856,8 +856,7 @@ void CWeapons::loadWeapons(const char* szWeaponListName, const WeaponsData_t* pD
 						newWeapon.m_iAmmoIndex = subKey->GetInt("m_iAmmoIndex");
 						newWeapon.m_iPreference = subKey->GetInt("m_iPreference");
 
-						KeyValues* flags = subKey->FindKey("flags");
-						if (flags) {
+						if (KeyValues* flags = subKey->FindKey("flags")) {
 							for (const auto& flag : g_weaponFlagMap) {
 								if (flags->GetInt(flag.first.c_str(), 0) == 1) {
 									newWeapon.m_iFlags |= flag.second;
@@ -892,8 +891,9 @@ void CBotWeapons::clearWeapons()
 {
 	for (CBotWeapon& m_theWeapon : m_theWeapons)
 	{
-		std::memset(&m_theWeapon, 0, sizeof(CBotWeapon));
-		//m_theWeapons[i].setHasWeapon(false);
+		m_theWeapon = CBotWeapon(); // Assign a default-constructed instance [APG]RoboCop[CL]
+		// Alternatively, call a reset or clear method if available
+		// m_theWeapon.reset();
 	}
 }
 

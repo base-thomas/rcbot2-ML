@@ -94,9 +94,9 @@ public:
 		return nullptr;
 	}
 
-	bool operator == (const intptr_t a)
+	bool operator == (const std::intptr_t a)
 	{
-		return (reinterpret_cast<int>(get()) == a);
+		return (reinterpret_cast<std::uintptr_t>(get()) == static_cast<std::uintptr_t>(a));
 	}
 
 	bool operator == ( edict_t *pent )

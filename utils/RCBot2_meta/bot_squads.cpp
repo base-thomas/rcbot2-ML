@@ -37,6 +37,7 @@
 #include "bot_getprop.h"
 #include "bot_globals.h"
 #include "bot_squads.h"
+#include "rcbot/logging.h"
 
 #include <algorithm>
 #include <cstring>
@@ -83,7 +84,7 @@ void CBotSquads::removeSquadMember (CBotSquad* pSquad, const edict_t* pMember)
 	}
 }
 
-edict_t *CBotSquad::getMember (const size_t iMember)
+edict_t *CBotSquad::getMember (const std::size_t iMember)
 {
 	// TODO: this is only used in CBotSquads::SquadJoin() -- inline the logic
 	if (iMember < 0 || iMember >= m_SquadMembers.size()) {
@@ -162,12 +163,10 @@ CBotSquad *CBotSquads::SquadJoin ( edict_t *pLeader, edict_t *pMember )
 	{
 		theSquad->AddMember(pMember);
 
-		CBotSquad* joinSquad = FindSquadByLeader(pLeader);
-
-		if ( joinSquad )
+		if ( CBotSquad* joinSquad = FindSquadByLeader(pLeader) )
 		{
 			// TODO make this a friend class so we could just join the squads directly?
-			for ( size_t i = 0; i < joinSquad->numMembers(); i ++ )
+			for ( unsigned i = 0; i < joinSquad->numMembers(); i ++ )
 			{
 				theSquad->AddMember(joinSquad->getMember(i));
 			}
@@ -293,12 +292,18 @@ void CBotSquad::ChangeLeader ()
 
 Vector CBotSquad :: GetFormationVector (const edict_t* pEdict)
 {
-	Vector vBase; 
+	Vector vBase;
 	Vector v_forward;
 	Vector v_right;
 	const trace_t *tr = CBotGlobals::getTraceResult();
 
 	edict_t *pLeader = GetLeader();
+
+	if (!pLeader || pLeader->IsFree() || pLeader->GetIServerEntity() == nullptr)
+	{
+		logger->Log(LogLevel::DEBUG, "Trying to get squad formation vector with a NULL squad leader! Alert a programmer! edict_t *pLeader == %p", pLeader);
+		return vec3_origin;
+	}
 
 	const int iPosition = GetFormationPosition(pEdict);
 	const Vector vLeaderOrigin = CBotGlobals::entityOrigin(pLeader);
@@ -410,7 +415,7 @@ void CBotSquad::AddMember ( edict_t *pEdict )
 	}
 }
 
-size_t CBotSquad::numMembers () const
+std::size_t CBotSquad::numMembers() const
 {
 	return m_SquadMembers.size();
 }
@@ -418,8 +423,7 @@ size_t CBotSquad::numMembers () const
 void CBotSquad :: ReturnAllToFormation ()
 {
 	for (const edict_t *member : m_SquadMembers) {
-		CBot *pBot = CBots::getBotPointer(member);
-		if (pBot) {
+		if (CBot *pBot = CBots::getBotPointer(member)) {
 			pBot->removeCondition(CONDITION_PUSH);
 			pBot->removeCondition(CONDITION_COVERT);
 			pBot->updateCondition(CONDITION_CHANGED);

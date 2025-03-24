@@ -108,7 +108,7 @@ public:
 
 	void eachVisible ( CVisibleFunc *pFunc ) const;
 
-	void checkVisible (edict_t* pEntity, int* iTicks, bool* bVisible, const int& iIndex, bool bCheckHead = false) const;
+	void checkVisible (edict_t* pEntity, int* iTicks, bool* bVisible, int iIndex, bool bCheckHead = false) const;
 
 	static void debugString ( char *string );
 
@@ -126,7 +126,7 @@ private:
 	// current player index we are checking -- updated more often
 	int m_iCurPlayer;
 	unsigned char *m_iIndicesVisible;//[NUM_BYTES];
-	int m_iMaxSize;
+	std::size_t m_iMaxSize;
 	int m_iMaxIndex;
 
 	std::set<edict_t*> m_VisibleSet;

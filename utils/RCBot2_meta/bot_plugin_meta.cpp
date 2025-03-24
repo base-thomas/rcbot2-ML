@@ -33,7 +33,7 @@
 
 #include "bot_cvars.h"
 
-#ifdef _WIN32
+#if defined(_WIN64) || defined(_WIN32)
 	#include <ctime>
 #endif
 
@@ -62,6 +62,7 @@
 #include <cstring>
 
 #include <build_info.h>
+#include <sourcehook.h>
 
 #if defined SM_EXT
 #include "rcbot/entprops.h"
@@ -110,7 +111,7 @@ RCBotPluginMeta g_RCBotPluginMeta;
 
 PLUGIN_EXPOSE(RCBotPluginMeta, g_RCBotPluginMeta);
 
-static ConVar rcbot2_ver_cvar("rcbot_ver", build_info::long_version, FCVAR_REPLICATED, "RCbot version");
+static ConVar rcbot2_ver_cvar("rcbot_ver", build_info::long_version, FCVAR_REPLICATED, "RCBot version");
 
 CON_COMMAND(rcbotd, "access the bot commands on a server")
 {
@@ -122,7 +123,7 @@ CON_COMMAND(rcbotd, "access the bot commands on a server")
 
 	// shift args and call subcommand
 	BotCommandArgs argList;
-	for (size_t i = 1; i <= static_cast<size_t>(args.ArgC()); i++) {
+	for (unsigned i = 1; i <= static_cast<unsigned>(args.ArgC()); i++) {
 		argList.emplace_back(args.Arg(static_cast<int>(i)));
 	}
 	const eBotCommandResult iResult = CBotGlobals::m_pCommands->execute(nullptr, argList);
@@ -330,7 +331,7 @@ public:
 	}
 } s_BaseAccessor;
 
-bool RCBotPluginMeta::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
+bool RCBotPluginMeta::Load(PluginId id, ISmmAPI *ismm, char *error, std::size_t maxlen, bool late)
 {
 	extern MTRand_int32 irand;
 
@@ -414,7 +415,7 @@ bool RCBotPluginMeta::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxle
 
 	int val;
 
-#ifdef _WIN32
+#if defined(_WIN64) || defined(_WIN32)
 	if (kvl.getInt("runplayermove_dods_win", &val))
 		rcbot_runplayercmd_dods.SetValue(val);
 	if (kvl.getInt("gamerules_win", &val))
@@ -563,7 +564,7 @@ bool RCBotPluginMeta::FireGameEvent(IGameEvent * pevent, bool bDontBroadcast)
 	RETURN_META_VALUE(MRES_IGNORED, true);
 }
 
-bool RCBotPluginMeta::Unload(char *error, size_t maxlen)
+bool RCBotPluginMeta::Unload(char *error, std::size_t maxlen)
 {
 #if defined SM_EXT
 	SM_UnloadExtension();
@@ -683,7 +684,7 @@ void RCBotPluginMeta::Hook_ClientCommand(edict_t *pEntity)
 	{		
 		// create shifted command list
 		BotCommandArgs argList;
-		for (size_t i = 1; i <= static_cast<size_t>(args.ArgC()); i++) {
+		for (unsigned i = 1; i <= static_cast<unsigned>(args.ArgC()); i++) {
 			argList.emplace_back(args.Arg(static_cast<int>(i)));
 		}
 		const eBotCommandResult iResult = CBotGlobals::m_pCommands->execute(pClient, argList);
@@ -887,7 +888,7 @@ void RCBotPluginMeta::BotQuotaCheck() {
 
 		// Change Bot Quota
 		if (bot_count > bot_target) {
-			CBots::kickRandomBot(static_cast<size_t>(bot_count - bot_target));
+			CBots::kickRandomBot(static_cast<unsigned>(bot_count - bot_target));
 			notify = true;
 		}
 		else if (bot_target > bot_count) {
@@ -946,9 +947,7 @@ bool RCBotPluginMeta::Hook_LevelInit(const char *pMapName,
 
 	CBots::mapInit();
 
-	CBotMod *pMod = CBotGlobals::getCurrentMod();
-	
-	if ( pMod )
+	if ( CBotMod *pMod = CBotGlobals::getCurrentMod() )
 		pMod->mapInit();
 
 	CBotSquads::FreeMemory();
@@ -984,12 +983,12 @@ void RCBotPluginMeta::Hook_LevelShutdown()
 	CBotEvents::freeMemory();
 }
 
-bool RCBotPluginMeta::Pause(char *error, size_t maxlen)
+bool RCBotPluginMeta::Pause(char *error, std::size_t maxlen)
 {
 	return true;
 }
 
-bool RCBotPluginMeta::Unpause(char *error, size_t maxlen)
+bool RCBotPluginMeta::Unpause(char *error, std::size_t maxlen)
 {
 	return true;
 }

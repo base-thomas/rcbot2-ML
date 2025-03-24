@@ -93,18 +93,17 @@ Additionally, `rcbot/logging.{h,cpp}` is released separately under the
 
 ### To-do:-
 
-- To allow bots to menuselect in order to buy upgrades for MVM
+- To allow bots to menuselect to buy upgrades for MVM
 - To improve game detection for non-listed Source gamemods
 - To add proper support for the new Zombie Infection TF2 maps since Scream Fortress XV update
 - To add proper support for Robot Destruction gameplay by destroying bots when not ubered
 - To prevent EngiBots from facing their SG Turrets the wrong way
-- To prevent bots from shooting at ghost players - like in plr_hightower_event Hell Zone
-- To allow bots to attack Skeleton Mobsters in pl_spineyard
-- To improve on how Medic and Spy bots behave smarter and properly when interacting with SG Turrets and Healing/Ubering
+- To improve on how Medic and Spy bots behave smarter and adequately when interacting with SG Turrets and Healing/Ubering
 - Bots need to understand how to play Kart games from sd_doomsday_event as they only wonder around those minigames
 - CBotTF2::changeClass needs to be implemented to avoid bots punting when using ClassRestrictionsForBots.smx and `rcbot_change_classes 1`
 - To add TF2C support along with Black Mesa Source, Counter-Strike: Source, Synergy and Dystopia
-- And to add proper AMD64/x64 support for RCBot2 TF2 and HL2DM
+- And to add proper AMD64/x64 support for RCBot2 TF2, DoDS and HL2DM
+- Edit the Mathfix definitions for Linux
 
 ## Credits:-
 
@@ -113,11 +112,11 @@ Additionally, `rcbot/logging.{h,cpp}` is released separately under the
 - Linux Conversion and Waypointing - [APG]RoboCop[CL]
 - TF2 support and enhancements - Ducky1231/Pongo
 - SourceMod and AMBuild support - nosoop
-- Synergy, MvM and CSS support - Anonymous Player/caxanga334
+- Synergy, MvM, CSS and AMBuild support - Anonymous Player/caxanga334
 - TF2 Classic support - Technochips
 - Linux Black Mesa and SDK2013 mathlib fix - Sappho
 - Dystopia support - Soft As Hell
-- Major waypointer for TF2 - LK777, RussiaTails, Witch, Francis, RevilleAJ
+- Major waypointer for TF2 - LK777, RussiaTails, Witch, Francis, RevilleAJ, Waffle033
 - Major waypointer for DoDS - INsane, Gamelarg05, genmac
 
 ## Waypointers:-

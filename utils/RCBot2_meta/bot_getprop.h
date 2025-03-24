@@ -349,7 +349,7 @@ public:
 
 	int getOffset() const
 	{
-		return m_offset;
+		return static_cast<int>(m_offset);
 	}
 private:
 	unsigned m_offset;
@@ -437,9 +437,7 @@ public:
 
 	static void updateSimulationTime ( edict_t *edict )
 	{
-		float *m_flSimulationTime = g_GetProps[GETPROP_SIMULATIONTIME].getFloatPointer(edict);
-
-		if ( m_flSimulationTime )
+		if ( float *m_flSimulationTime = g_GetProps[GETPROP_SIMULATIONTIME].getFloatPointer(edict) )
 			*m_flSimulationTime = gpGlobals->curtime;
 	}
 
@@ -626,21 +624,21 @@ public:
 	{
 		const int *score_array = g_GetProps[GETPROP_DOD_SCORE].getIntPointer(resource);
 
-		return score_array!= nullptr ? score_array[ENTINDEX(pPlayer)] : 0;
+		return score_array != nullptr ? score_array[static_cast<std::size_t>(ENTINDEX(pPlayer))] : 0;
 	}
 
 	static int getPlayerObjectiveScoreDOD (edict_t* resource, const edict_t* pPlayer)
 	{
 		const int *score_array = g_GetProps[GETPROP_DOD_OBJSCORE].getIntPointer(resource);
 
-		return score_array!= nullptr ? score_array[ENTINDEX(pPlayer)] : 0;
+		return score_array != nullptr ? score_array[static_cast<std::size_t>(ENTINDEX(pPlayer))] : 0;
 	}
 
 	static int getPlayerDeathsDOD (edict_t* resource, const edict_t* pPlayer)
 	{
 		const int *score_array = g_GetProps[GETPROP_DOD_DEATHS].getIntPointer(resource);
 
-		return score_array!= nullptr ? score_array[ENTINDEX(pPlayer)] : 0;
+		return score_array != nullptr ? score_array[static_cast<std::size_t>(ENTINDEX(pPlayer))] : 0;
 	}
 
 	static float getSmokeSpawnTime ( edict_t *pSmoke )
@@ -909,8 +907,8 @@ public:
 	static int GetEntPropInt(CBaseEntity *pEntity, const char *prop)
 	{
 		const datamap_t* pDataMap = CBaseEntity_GetDataDescMap(pEntity);
-		const int offset = UTIL_FindInDataMap(pDataMap, prop);
-		const int propvalue = *reinterpret_cast<int*>(reinterpret_cast<uint8_t*>(pEntity) + offset); // to-do: bit count?
+		const unsigned offset = UTIL_FindInDataMap(pDataMap, prop);
+		const int propvalue = *reinterpret_cast<int*>(reinterpret_cast<uint8_t*>(pEntity) + offset); // TODO: bit count?
 		return propvalue;
 	}
 
@@ -924,7 +922,7 @@ public:
 	static float GetEntPropFloat(CBaseEntity *pEntity, const char *prop)
 	{
 		const datamap_t* pDataMap = CBaseEntity_GetDataDescMap(pEntity);
-		const int offset = UTIL_FindInDataMap(pDataMap, prop);
+		const unsigned offset = UTIL_FindInDataMap(pDataMap, prop);
 		const float propvalue = *reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(pEntity) + offset);
 		return propvalue;
 	}
@@ -939,7 +937,7 @@ public:
 	static edict_t *GetEntPropEdict(CBaseEntity *pEntity, const char *prop)
 	{
 		const datamap_t* pDataMap = CBaseEntity_GetDataDescMap(pEntity);
-		const int offset = UTIL_FindInDataMap(pDataMap, prop);
+		const unsigned offset = UTIL_FindInDataMap(pDataMap, prop);
 		edict_t *pEdict = *reinterpret_cast<edict_t**>(reinterpret_cast<uint8_t*>(pEntity) + offset);
 		if(!pEdict || pEdict->IsFree())
 		{
@@ -959,7 +957,7 @@ public:
 	static Vector *GetEntPropVector(CBaseEntity *pEntity, const char *prop)
 	{
 		const datamap_t* pDataMap = CBaseEntity_GetDataDescMap(pEntity);
-		const int offset = UTIL_FindInDataMap(pDataMap, prop);
+		const unsigned offset = UTIL_FindInDataMap(pDataMap, prop);
 		Vector *propvalue = reinterpret_cast<Vector*>(reinterpret_cast<uint8_t*>(pEntity) + offset);
 		return propvalue;
 	}
@@ -973,7 +971,7 @@ public:
 	static int GetEntityHealth(CBaseEntity* pEntity)
 	{
 		const datamap_t* pDataMap = CBaseEntity_GetDataDescMap(pEntity);
-		const int offset = UTIL_FindInDataMap(pDataMap, "m_iHealth");
+		const unsigned offset = UTIL_FindInDataMap(pDataMap, "m_iHealth");
 		const int iHealth = *reinterpret_cast<int*>(reinterpret_cast<char*>(pEntity) + offset);
 		return iHealth;
 	}
@@ -986,7 +984,7 @@ public:
 	static int GetEntityMaxHealth(CBaseEntity* pEntity)
 	{
 		const datamap_t* pDataMap = CBaseEntity_GetDataDescMap(pEntity);
-		const int offset = UTIL_FindInDataMap(pDataMap, "m_iMaxHealth");
+		const unsigned offset = UTIL_FindInDataMap(pDataMap, "m_iMaxHealth");
 		const int iMaxHealth = *reinterpret_cast<int*>(reinterpret_cast<char*>(pEntity) + offset);
 		return iMaxHealth;
 	}
@@ -999,11 +997,11 @@ public:
 	static float GetEntityHealthPercent(CBaseEntity* pEntity)
 	{
 		const datamap_t* pDataMap = CBaseEntity_GetDataDescMap(pEntity);
-		const int offset = UTIL_FindInDataMap(pDataMap, "m_iHealth");
+		const unsigned offset = UTIL_FindInDataMap(pDataMap, "m_iHealth");
 		//int offset2 = UTIL_FindInDataMap(pDataMap, "m_iMaxHealth"); //unused? [APG]RoboCop[CL]
 		const int iHealth = *reinterpret_cast<int*>(reinterpret_cast<char*>(pEntity) + offset);
 		const int iMaxHealth = *reinterpret_cast<int*>(reinterpret_cast<char*>(pEntity) + offset);
-		return static_cast<float>(iHealth) / iMaxHealth;
+		return static_cast<float>(iHealth) / static_cast<float>(iMaxHealth);
 	}
 };
 

@@ -638,7 +638,7 @@ CBotCommandInline WaypointShowVisCommand("showvis", 0, [](CClient *pClient, cons
 			const int index = CWaypoints::getWaypointIndex(pWpt);
 			const CWaypointVisibilityTable *pTable = CWaypoints::getVisiblity();
 	
-			for ( int i = 0; i < static_cast<int>(CWaypoints::numWaypoints()); i ++ )
+			for ( int i = 0; i < CWaypoints::numWaypoints(); i ++ )
 			{
 				CWaypoint *pOther = CWaypoints::getWaypoint(i);
 

@@ -44,7 +44,7 @@
  * 						in the error buffer, if the buffer is non-NULL and 
  * 						greater than 0 bytes in size.
  */
-bool SM_AcquireInterfaces(char *error, size_t maxlength);
+bool SM_AcquireInterfaces(char *error, std::size_t maxlength);
 
 /**
  * @brief Sets each acquired interface to NULL.

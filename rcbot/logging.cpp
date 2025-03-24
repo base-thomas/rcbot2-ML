@@ -16,7 +16,7 @@
 
 #include "logging.h"
 
-#if defined WIN32
+#if defined(_WIN64) || defined(_WIN32)
 // for SetConsoleTextAttribute and co.
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -24,6 +24,7 @@
 
 #include <cstdarg>
 #include <cstdio>
+#include <cstdint>
 
 #include "convar.h"
 #include "icvar.h"
@@ -44,10 +45,11 @@ const char *LOGLEVEL_STRINGS[]     = { "FATAL", "ERROR", "WARN", "INFO", "DEBUG"
 const char *LOGLEVEL_ANSI_COLORS[] = { "\x1B[1;31m", "\x1B[1;91m", "\x1B[1;33m",
 	                                   "\x1B[1;92m", "\x1B[1;94m", "\x1B[1;96m" };
 
-#if defined WIN32
+#if defined(_WIN64) || defined(_WIN32)
 #define FOREGROUND_YELLOW (FOREGROUND_GREEN | FOREGROUND_RED)
 #define FOREGROUND_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
-constexpr DWORD LOGLEVEL_WINCON_COLORS[] = { FOREGROUND_RED,
+//Supposed to be `WORD` not `DWORD`? [APG]RoboCop[CL]
+constexpr WORD LOGLEVEL_WINCON_COLORS[] = { FOREGROUND_RED,
 	                                     FOREGROUND_RED | FOREGROUND_INTENSITY,
 	                                     FOREGROUND_YELLOW,
 	                                     FOREGROUND_GREEN | FOREGROUND_INTENSITY,
@@ -61,14 +63,14 @@ const Color LOGLEVEL_CONSOLE_COLORS[] = {
 	{ 19, 198, 13, 255 }, { 59, 120, 255, 255 }, { 97, 214, 214, 255 },
 };
 
-enum MessageColorizationMode
+enum MessageColorizationMode : std::uint8_t
 {
 	Colorize_None,
 
 	// ANSI escapes
 	Colorize_ANSI,
 
-#if defined WIN32
+#if defined(_WIN64)	|| defined(_WIN32)
 	// windows console -- uses console text attributes
 	Colorize_WinConsole,
 #endif
@@ -87,12 +89,12 @@ MessageColorizationMode GetMessageColorizationMode()
 	{
 		return Colorize_ANSI;
 	}
-#elif defined WIN32
+#elif defined(_WIN64) || defined(_WIN32)
 	if (!engine->IsDedicatedServer())
 	{
 		return Colorize_ClientConsole;
 	}
-	else if (CommandLine()->CheckParm("-console") != nullptr)
+	if (CommandLine()->CheckParm("-console") != nullptr)
 	{
 		return Colorize_WinConsole;
 	}
@@ -100,7 +102,7 @@ MessageColorizationMode GetMessageColorizationMode()
 	return Colorize_None;
 }
 
-void CBotLogger::Log(LogLevel level, const char *fmt, ...)
+void CBotLogger::Log(const LogLevel level, const char *fmt, ...)
 {
 	if (level > static_cast<LogLevel>(rcbot_loglevel.GetInt()))
 	{
@@ -126,7 +128,7 @@ void CBotLogger::Log(LogLevel level, const char *fmt, ...)
 			Msg("%s[RCBot] %s: %s\x1B[0m\n", LOGLEVEL_ANSI_COLORS[level], LOGLEVEL_STRINGS[level], buf);
 		}
 		break;
-#if defined WIN32
+#if defined(_WIN64) || defined(_WIN32)
 	case Colorize_WinConsole:
 		HANDLE hConsoleHandle;
 		hConsoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -142,7 +144,7 @@ void CBotLogger::Log(LogLevel level, const char *fmt, ...)
 		icvar->ConsoleColorPrintf(LOGLEVEL_CONSOLE_COLORS[level], "[RCBot] %s: %s\n", LOGLEVEL_STRINGS[level], buf);
 		break;
 	case Colorize_None:
-	default:
+	//default:
 		if (level <= LogLevel::WARN)
 		{
 			Warning("[RCBot] %s: %s\n", LOGLEVEL_STRINGS[level], buf);

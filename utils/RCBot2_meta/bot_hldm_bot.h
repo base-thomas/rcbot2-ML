@@ -112,6 +112,7 @@ private:
 	int m_iClip2 = 0;
 
 	edict_t* m_pCarryingObject = nullptr; // using grav gun
+	float m_fCachedNormSpeed = 0.0f; // hl2_normspeed cvar value cache -caxanga334
 };
 
 #endif

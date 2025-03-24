@@ -35,6 +35,8 @@
 #pragma pop_macro("clamp")
 
 #include "helper.h"
+
+#include <IPlayerHelpers.h>
 #include "IEngineTrace.h"
 #include "toolframework/itoolentity.h"
 #include <server_class.h>

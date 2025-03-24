@@ -33,7 +33,7 @@
 
 using namespace SourceMod;
 
-bool SM_AcquireInterfaces(char *error, size_t maxlength)
+bool SM_AcquireInterfaces(char *error, std::size_t maxlength)
 {
 	SM_FIND_IFACE_OR_FAIL(SOURCEMOD, sm_main, error, maxlength);
 

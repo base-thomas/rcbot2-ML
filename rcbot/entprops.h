@@ -38,7 +38,7 @@
 
 enum : std::uint32_t
 {
-	INVALID_ENT_REFERENCE = 0xFFFFFFFF
+	INVALID_ENT_REFERENCE = 0xFFFFFFFF // TODO: replace magic number [APG]RoboCop[CL]
 };
 
 enum PropType : std::uint8_t
@@ -64,7 +64,7 @@ public:
 	Vector GetEntPropVector(int entity, PropType proptype, const char *prop, int element = 0);
 	Vector *GetEntPropVectorPointer(int entity, PropType proptype, const char *prop, int element = 0);
 	bool SetEntPropVector(int entity, PropType proptype, const char *prop, const Vector& value, int element = 0);
-	char *GetEntPropString(int entity, PropType proptype, const char *prop, int maxlen, int *len, int element = 0);
+	char *GetEntPropString(int entity, PropType proptype, const char* prop, int maxlen, std::size_t* len, int element = 0);
 	bool SetEntPropString(int entity, PropType proptype, const char *prop, const char *value, int element = 0);
 	int GetEntData(int entity, int offset, int size = 4);
 	bool SetEntData(int entity, int offset, int value, int size = 4, bool changeState = false);
@@ -74,13 +74,13 @@ public:
 	bool SetEntDataEnt(int entity, int offset, int value, bool changeState = false);
 	Vector GetEntDataVector(int entity, int offset);
 	bool SetEntDataVector(int entity, int offset, const Vector& value, bool changeState = false);
-	char *GetEntDataString(int entity, int offset, int maxlen, int *len);
+	char *GetEntDataString(int entity, int offset, int maxlen, std::size_t* len);
 	bool SetEntDataString(int entity, int offset, const char *value, int maxlen, bool changeState = false);
 	int GameRules_GetProp(const char *prop, int size = 4, int element = 0) const;
 	float GameRules_GetPropFloat(const char *prop, int element = 0) const;
 	int GameRules_GetPropEnt(const char *prop, int element = 0) const;
 	Vector GameRules_GetPropVector(const char *prop, int element = 0) const;
-	char *GameRules_GetPropString(const char *prop, int *len, int maxlen, int element = 0) const;
+	char *GameRules_GetPropString(const char* prop, std::size_t* len, int maxlen, int element = 0) const;
 	RoundState GameRules_GetRoundState() const;
 
 private:

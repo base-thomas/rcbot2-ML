@@ -55,9 +55,9 @@
 
 #include "rcbot/logging.h"
 
-#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
+//#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
 #include "valve_minmax_off.h"
-#endif
+//#endif
 
 eTFMapType CTeamFortress2Mod :: m_MapType = TF_MAP_CTF;
 tf_tele_t CTeamFortress2Mod :: m_Teleporters[RCBOT_MAXPLAYERS];
@@ -130,9 +130,7 @@ bool CTeamFortress2Mod::isSuddenDeath()
 	if (!mp_stalemate_enable.IsValid() || !mp_stalemate_enable.GetBool() || isMapType(TF_MAP_ARENA))
 		return false;
 
-	void *pGameRules = GetGameRules();
-
-	if (pGameRules)
+	if (void *pGameRules = GetGameRules())
 	{
 		const int iRoundState = CClassInterface::TF2_getRoundState(pGameRules);
 		 
@@ -186,7 +184,7 @@ void CTeamFortress2Mod ::modFrame ()
 {
 	if( m_bPlayerHasSpawned )
 	{
-		if ( m_ObjectiveResource.m_ObjectiveResource == NULL )
+		if ( m_ObjectiveResource.m_ObjectiveResource == nullptr )
 		{
 			m_ObjectiveResource.m_ObjectiveResource = CClassInterface::FindEntityByNetClass(gpGlobals->maxClients+1, "CTFObjectiveResource");
 		
@@ -282,6 +280,10 @@ void CTeamFortress2Mod :: mapInit ()
 		m_MapType = TF_MAP_SD; // special delivery
 	else if (std::strncmp(szmapname, "tr_", 3) == 0)
 		m_MapType = TF_MAP_TR; // training mode
+	else if (std::strncmp(szmapname, "cppl_", 5) == 0)
+		m_MapType = TF_MAP_CPPL; // CP+PL maps
+	else if (std::strncmp(szmapname, "gg_", 3) == 0 ) // GunGame - RussiaTails
+		m_MapType = TF_MAP_GG; // GunGame maps
 	else if (std::strncmp(szmapname, "mvm_", 4) == 0 || std::strncmp(szmapname, "gd_", 3) == 0 || std::strncmp(szmapname, "stt_", 4) == 0) // gd is MvM Guardian, for now there are only two maps exist with this prefix. Moved stt to mvm to make bots attack a tank - RussiaTails
 		m_MapType = TF_MAP_MVM; // mann vs machine
 	else if (std::strncmp(szmapname, "rd_", 3) == 0)
@@ -1092,15 +1094,12 @@ edict_t *CTeamFortress2Mod :: nearestDispenser (const Vector& vOrigin, const int
 	for (tf_disp_t& m_Dispenser : m_Dispensers)
 	{
 		//m_Dispensers[i]
-		edict_t* pDisp = m_Dispenser.disp.get();
 
-		if ( pDisp )
+		if ( edict_t* pDisp = m_Dispenser.disp.get() )
 		{
-			if ( CTeamFortress2Mod::getTeam(pDisp) == team )
+			if ( getTeam(pDisp) == team )
 			{
-				const float fDist = (CBotGlobals::entityOrigin(pDisp) - vOrigin).Length();
-
-				if ( fDist < fNearest )
+				if (const float fDist = (CBotGlobals::entityOrigin(pDisp) - vOrigin).Length(); fDist < fNearest )
 				{
 					pNearest = pDisp;
 					fNearest = fDist;
@@ -1192,17 +1191,15 @@ void CTeamFortress2Mod::updatePointMaster()
 {
 	if ( m_PointMasterResource.get() == nullptr)
 	{
-		edict_t *pMaster = CClassInterface::FindEntityByClassnameNearest(Vector(0,0,0),"team_control_point_master",65535);
-
-		if ( pMaster )
+		if ( edict_t *pMaster = CClassInterface::FindEntityByClassnameNearest(Vector(0,0,0),"team_control_point_master",65535) )
 		{
 			extern IServerGameEnts *servergameents;
 			extern IServerTools *servertools;
 			
 			// HACK: we use one of the known CBaseEntity-sized entities to compute the offset to the first subclass member for CTeamControlPointMaster / CTeamControlPointRound
-			const size_t baseEntityOffset = servertools->GetEntityFactoryDictionary()->FindFactory("simple_physics_brush")->GetEntitySize();
+			const std::size_t baseEntityOffset = servertools->GetEntityFactoryDictionary()->FindFactory("simple_physics_brush")->GetEntitySize();
 
-			const uintptr_t pMasterMembers = reinterpret_cast<uintptr_t>(servergameents->EdictToBaseEntity(pMaster)) + baseEntityOffset;
+			const std::uintptr_t pMasterMembers = reinterpret_cast<std::uintptr_t>(servergameents->EdictToBaseEntity(pMaster)) + baseEntityOffset;
 			m_PointMaster = reinterpret_cast<CTeamControlPointMaster*>(pMasterMembers);
 			m_PointMasterResource = pMaster;
 			
@@ -1220,7 +1217,7 @@ void CTeamFortress2Mod::updatePointMaster()
 					try
 					{
 						CBaseEntity *pent = m_PointMaster->m_ControlPointRounds[r];
-						CTeamControlPointRound* pointRound = reinterpret_cast<CTeamControlPointRound*>(reinterpret_cast<uintptr_t>(pent) + baseEntityOffset);
+						CTeamControlPointRound* pointRound = reinterpret_cast<CTeamControlPointRound*>(reinterpret_cast<std::uintptr_t>(pent) + baseEntityOffset);
 
 						logger->Log(LogLevel::DEBUG, "Control Points for Round %d", r);
 
@@ -1333,9 +1330,7 @@ void CTeamFortress2Mod :: roundReset ()
 	{
 		if ( !m_bMVMFlagStartValid )
 		{
-			CWaypoint *pGoal = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_FLAG);
-
-			if ( pGoal )
+			if ( CWaypoint *pGoal = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_FLAG) )
 			{
 				m_vNearestTankLocation = m_vMVMFlagStart = m_vFlagLocationBlue = pGoal->getOrigin();
 				m_bMVMFlagStartValid = m_bFlagLocationValidBlue = true;
@@ -1351,9 +1346,7 @@ void CTeamFortress2Mod :: roundReset ()
 
 		if ( !m_bMVMCapturePointValid )
 		{
-			CWaypoint *pGoal = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_CAPPOINT);
-
-			if ( pGoal )
+			if ( CWaypoint *pGoal = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_CAPPOINT) )
 			{
 				m_vMVMCapturePoint = pGoal->getOrigin();
 				m_bMVMCapturePointValid = true;

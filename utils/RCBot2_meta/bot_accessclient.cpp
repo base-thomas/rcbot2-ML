@@ -87,9 +87,7 @@ void CAccessClients :: showUsers ( edict_t *pEntity )
 
 	for (const CAccessClient* pPlayer : m_Clients)
 	{
-		const CClient* pClient = CClients::findClientBySteamID(pPlayer->getSteamID());
-		
-		if ( pClient )
+		if ( const CClient* pClient = CClients::findClientBySteamID(pPlayer->getSteamID()) )
 			CBotGlobals::botMessage(pEntity,0,"[ID: %s]/[AL: %d] (currently playing as : %s)\n",pPlayer->getSteamID(),pPlayer->getAccessLevel(),pClient->getName());
 		else
 			CBotGlobals::botMessage(pEntity,0,"[ID: %s]/[AL: %d]\n",pPlayer->getSteamID(),pPlayer->getAccessLevel());
@@ -114,9 +112,7 @@ void CAccessClients :: load ()
 	
 	CBotGlobals::buildFileName(filename,BOT_ACCESS_CLIENT_FILE,BOT_CONFIG_FOLDER,BOT_CONFIG_EXTENSION);
 
-	std::fstream fp = CBotGlobals::openFile(filename, std::fstream::in);
-
-	if ( fp )
+	if ( std::fstream fp = CBotGlobals::openFile(filename, std::fstream::in) )
 	{
 		char buffer[256];
 
@@ -139,9 +135,9 @@ void CAccessClients :: load ()
 			if ( buffer[0] == '#' )
 				continue;
 
-			const size_t len = std::strlen(buffer);
+			const std::size_t len = std::strlen(buffer);
 
-			size_t i = 0;
+			std::size_t i = 0;
 
 			while (( i < len ) && ((buffer[i] == '\"') || (buffer[i] == ' ')))
 				i++;
@@ -194,9 +190,7 @@ void CAccessClients :: save ()
 	
 	CBotGlobals::buildFileName(filename,BOT_ACCESS_CLIENT_FILE,BOT_CONFIG_FOLDER,BOT_CONFIG_EXTENSION);
 
-	std::fstream fp = CBotGlobals::openFile(filename, std::fstream::out);
-
-	if ( fp )
+	if ( std::fstream fp = CBotGlobals::openFile(filename, std::fstream::out) )
 	{
 		for (CAccessClient* const& m_Client : m_Clients)
 		{

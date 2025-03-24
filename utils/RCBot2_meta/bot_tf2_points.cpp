@@ -110,8 +110,8 @@ const int cpindex = m_WaypointAreaToIndexTranslation[wptarea];
 	if ( waypointflags & CWaypointTypes::W_FL_AREAONLY )
 	{
 		// AND
-		return m_ValidPoints[0][0][cpindex].bValid && m_ValidPoints[1][1][cpindex].bValid || 
-			   m_ValidPoints[0][1][cpindex].bValid && m_ValidPoints[1][0][cpindex].bValid;
+		return (m_ValidPoints[0][0][cpindex].bValid && m_ValidPoints[1][1][cpindex].bValid) || 
+			   (m_ValidPoints[0][1][cpindex].bValid && m_ValidPoints[1][0][cpindex].bValid);
 	}
 
 	// OR
@@ -285,9 +285,9 @@ CTeamControlPointRound *CTeamControlPointMaster:: getCurrentRound ( )
 	extern IServerTools *servertools;
 	
 	// HACK: we use one of the known CBaseEntity-sized entities to compute the offset to the first subclass member for CTeamControlPointMaster / CTeamControlPointRound
-	const size_t baseEntityOffset = servertools->GetEntityFactoryDictionary()->FindFactory("simple_physics_brush")->GetEntitySize();
+	const std::size_t baseEntityOffset = servertools->GetEntityFactoryDictionary()->FindFactory("simple_physics_brush")->GetEntitySize();
 
-	return reinterpret_cast<CTeamControlPointRound*>(reinterpret_cast<uintptr_t>(pent) + baseEntityOffset);
+	return reinterpret_cast<CTeamControlPointRound*>(reinterpret_cast<std::uintptr_t>(pent) + baseEntityOffset);
 }
 
 //////////////////

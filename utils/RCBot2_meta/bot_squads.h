@@ -88,7 +88,7 @@ public:
 		m_pLeader = pLeader;
 	}
 
-	edict_t *getMember ( size_t iMember );
+	edict_t *getMember (std::size_t iMember);
 
 	void ToggleFireMode ()
 	{
@@ -118,6 +118,19 @@ public:
 	bool IsCrouchMode () const
 	{
 		return m_CombatType == COMBAT_CROUCH;
+	}
+
+	// Returns true if the squad leader entity is valid. False if not. -caxanga334
+	bool IsSquadLeaderValid()
+	{
+		edict_t* pLeader = m_pLeader.get();
+
+		if (!pLeader || pLeader->IsFree() || pLeader->GetIServerEntity() == nullptr)
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	edict_t *GetLeader ()
@@ -169,7 +182,7 @@ public:
 
 	void AddMember ( edict_t *pEdict );
 
-	size_t numMembers () const;
+	std::size_t numMembers() const;
 
 	bool IsMember (const edict_t* pEdict);
 

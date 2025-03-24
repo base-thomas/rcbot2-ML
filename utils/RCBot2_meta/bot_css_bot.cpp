@@ -813,9 +813,7 @@ bool CCSSBot::executeAction(const eBotAction iAction)
 		}
 		case BOT_UTIL_PLANT_BOMB:
 		{
-			CWaypoint* pWaypoint = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_GOAL);
-
-			if(pWaypoint)
+			if(CWaypoint* pWaypoint = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_GOAL))
 			{
 				CWaypoint * pRoute = nullptr;
 				if(m_fUseRouteTime <= engine->Time())
@@ -829,8 +827,7 @@ bool CCSSBot::executeAction(const eBotAction iAction)
 		}
 		case BOT_UTIL_PICKUP_BOMB:
 		{
-			edict_t *pBomb = CCounterStrikeSourceMod::getBomb();
-			if(pBomb)
+			if(edict_t *pBomb = CCounterStrikeSourceMod::getBomb())
 			{
 				m_pSchedules->add(new CBotPickupSched(pBomb));
 				return true;
@@ -846,11 +843,9 @@ bool CCSSBot::executeAction(const eBotAction iAction)
 			if(pBomb)
 			{
 				// Find the nearest bomb waypoint to retreive the area from
-				CWaypoint *pBombWpt = CWaypoints::getWaypoint(CWaypoints::nearestWaypointGoal(CWaypointTypes::W_FL_GOAL, vBomb, 256.0f, 0));
-				if(pBombWpt)
+				if(CWaypoint *pBombWpt = CWaypoints::getWaypoint(CWaypoints::nearestWaypointGoal(CWaypointTypes::W_FL_GOAL, vBomb, 256.0f, 0)))
 				{
-					CWaypoint *pDefend = CWaypoints::randomWaypointGoalNearestArea(CWaypointTypes::W_FL_DEFEND, getTeam(), pBombWpt->getArea(), true, this, false, &vBomb);
-					if(pDefend)
+					if(CWaypoint *pDefend = CWaypoints::randomWaypointGoalNearestArea(CWaypointTypes::W_FL_DEFEND, getTeam(), pBombWpt->getArea(), true, this, false, &vBomb))
 					{
 						pSched->addTask(new CFindPathTask(CWaypoints::getWaypointIndex(pDefend)));
 						pSched->addTask(new CCSSGuardTask(getPrimaryWeapon(), pDefend->getOrigin(), pDefend->getAimYaw(), false, 0.0f, pDefend->getFlags()));
@@ -867,11 +862,9 @@ bool CCSSBot::executeAction(const eBotAction iAction)
 		{
 			CBotSchedule* pSched = new CBotSchedule();
 			pSched->setID(SCHED_DEFENDPOINT);
-			const CWaypoint *pGoal = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_GOAL, getTeam());
-			if(pGoal)
+			if(const CWaypoint *pGoal = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_GOAL, getTeam()))
 			{
-				CWaypoint *pDefend = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_DEFEND, getTeam(), pGoal->getArea(), true, this);
-				if(pDefend)
+				if(CWaypoint *pDefend = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_DEFEND, getTeam(), pGoal->getArea(), true, this))
 				{
 					pSched->addTask(new CFindPathTask(CWaypoints::getWaypointIndex(pDefend)));
 					pSched->addTask(new CCSSGuardTask(getPrimaryWeapon(), pDefend->getOrigin(), pDefend->getAimYaw(), false, 0.0f, pDefend->getFlags()));
@@ -883,8 +876,7 @@ bool CCSSBot::executeAction(const eBotAction iAction)
 		}
 		case BOT_UTIL_DEFUSE_BOMB:
 		{
-			edict_t *pBomb = CCounterStrikeSourceMod::getBomb();
-			if(pBomb)
+			if(edict_t *pBomb = CCounterStrikeSourceMod::getBomb())
 			{
 				CBotSchedule *pSched = new CBotSchedule();
 				CBotTask *pFindPath = new CFindPathTask(pBomb);
@@ -905,9 +897,8 @@ bool CCSSBot::executeAction(const eBotAction iAction)
 			CBotSchedule* pSched = new CBotSchedule();
 
 			pSched->setID(SCHED_GOTO_ORIGIN);
-			CWaypoint* pWaypoint = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_GOAL);
 
-			if(pWaypoint)
+			if(CWaypoint* pWaypoint = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_GOAL))
 			{
 				CWaypoint* pRoute = CWaypoints::randomRouteWaypoint(this, getOrigin(), pWaypoint->getOrigin(), getTeam(),
 																	pWaypoint->getArea());
@@ -1016,8 +1007,7 @@ bool CCSSBot::executeAction(const eBotAction iAction)
 			CBotSchedule* pSched = new CBotSchedule();
 			pSched->setID(SCHED_SNIPE);
 
-			CWaypoint* pWaypoint = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_SNIPER, getTeam(), 0, false);
-			if(pWaypoint)
+			if(CWaypoint* pWaypoint = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_SNIPER, getTeam(), 0, false))
 			{
 				CFindPathTask *pFindPath = new CFindPathTask(CWaypoints::getWaypointIndex(pWaypoint));
 				//pFindPath->setInterruptFunction(new CBotCSSRoamInterrupt());
@@ -1034,9 +1024,8 @@ bool CCSSBot::executeAction(const eBotAction iAction)
 			CBotSchedule* pSched = new CBotSchedule();
 
 			pSched->setID(SCHED_GOTO_ORIGIN);
-			CWaypoint* pWaypoint = CWaypoints::randomWaypointGoal(-1);
 
-			if(pWaypoint)
+			if(CWaypoint* pWaypoint = CWaypoints::randomWaypointGoal(-1))
 			{
 				const int iWaypoint = CWaypoints::getWaypointIndex(pWaypoint);
 				CFindPathTask *pFindPath = new CFindPathTask(iWaypoint);
@@ -1092,8 +1081,7 @@ void CCSSBot::touchedWpt(CWaypoint *pWaypoint, const int iNextWaypoint, const in
 {
 	if(iNextWaypoint != -1 && pWaypoint->hasFlag(CWaypointTypes::W_FL_DOOR)) // Use waypoint: Check for door
 	{
-		CWaypoint *pNext = CWaypoints::getWaypoint(iNextWaypoint);
-		if(pNext)
+		if(CWaypoint *pNext = CWaypoints::getWaypoint(iNextWaypoint))
 		{
 			/**
 			 * Traces a line between the current waypoint and the next waypoint. If a door is blocking the path, try to open it.
@@ -1121,7 +1109,7 @@ void CCSSBot::touchedWpt(CWaypoint *pWaypoint, const int iNextWaypoint, const in
 	CBot::touchedWpt(pWaypoint, iNextWaypoint, iPrevWaypoint);
 }
 
-bool CCSSBot::canGotoWaypoint(const Vector vPrevWaypoint, CWaypoint *pWaypoint, CWaypoint *pPrev)
+bool CCSSBot::canGotoWaypoint(const Vector vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev)
 {
 	if (pWaypoint->hasFlag(CWaypointTypes::W_FL_NO_HOSTAGES) || pWaypoint->hasFlag(CWaypointTypes::W_FL_LADDER))
 	{

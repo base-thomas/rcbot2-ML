@@ -52,18 +52,19 @@
 #elif defined __APPLE__
 #define PLATFORM_EXT ".dylib"
 #endif
-typedef void *HINSTANCE;
+typedef void* HINSTANCE;
 #define PATH_SEP_CHAR "/"
 #include <dlfcn.h>
 #endif
 
-#if defined(_WIN64) || defined(__x86_64__)
+#if defined(_WIN64) || defined(__x86_64__) || defined(__amd64__)
 #define PLATFORM_ARCH_FOLDER "x64" PATH_SEP_CHAR
 #else
 #define PLATFORM_ARCH_FOLDER ""
 #endif
 
-#define METAMOD_API_MAJOR 2
+constexpr int METAMOD_API_MAJOR = 2;
+
 #define FILENAME_1_6_EP2 PLATFORM_ARCH_FOLDER "rcbot.2.ep2" PLATFORM_EXT
 #define FILENAME_1_6_EP1 PLATFORM_ARCH_FOLDER "rcbot.2.ep1" PLATFORM_EXT
 #define FILENAME_1_6_L4D PLATFORM_ARCH_FOLDER "rcbot.2.l4d" PLATFORM_EXT
@@ -86,20 +87,20 @@ typedef void *HINSTANCE;
 #define FILENAME_1_6_CONTAGION PLATFORM_ARCH_FOLDER "rcbot.2.contagion" PLATFORM_EXT
 #define FILENAME_1_6_BMS PLATFORM_ARCH_FOLDER "rcbot.2.bms" PLATFORM_EXT
 
-HINSTANCE g_hCore   = nullptr;
+HINSTANCE g_hCore = nullptr;
 bool load_attempted = false;
 
-size_t UTIL_Format(char *buffer, size_t maxlength, const char *fmt, ...);
+std::size_t UTIL_Format(char *buffer, std::size_t maxlength, const char *fmt, ...);
 
 class FailPlugin : public SourceMM::ISmmFailPlugin
 {
-  public:
+public:
 	int GetApiVersion() override
 	{
 		return fail_version;
 	}
 
-	bool Load(SourceMM::PluginId id, SourceMM::ISmmAPI *ismm, char *error, const size_t maxlength, bool late) override
+	bool Load(SourceMM::PluginId id, SourceMM::ISmmAPI *ismm, char *error, const std::size_t maxlength, bool late) override
 	{
 		if (error != nullptr && maxlength != 0)
 		{
@@ -112,27 +113,27 @@ class FailPlugin : public SourceMM::ISmmFailPlugin
 	char error_buffer[512];
 } s_FailPlugin;
 
-size_t UTIL_Format(char *buffer, const size_t maxlength, const char *fmt, ...)
+std::size_t UTIL_Format(char *buffer, const std::size_t maxlength, const char *fmt, ...)
 {
 	va_list ap;
 
 	va_start(ap, fmt);
-	size_t len = vsnprintf(buffer, maxlength, fmt, ap);
+	std::size_t len = vsnprintf(buffer, maxlength, fmt, ap);
 	va_end(ap);
 
 	if (len >= maxlength)
 	{
-		len         = maxlength - 1;
+		len = maxlength - 1;
 		buffer[len] = '\0';
 	}
 
 	return len;
 }
 
-METAMOD_PLUGIN *_GetPluginPtr(const char *path, const int fail_api)
+METAMOD_PLUGIN* _GetPluginPtr(const char* path, const int fail_api)
 {
 	METAMOD_FN_ORIG_LOAD fn;
-	METAMOD_PLUGIN *pl;
+	METAMOD_PLUGIN* pl;
 	int ret;
 
 	if (!((g_hCore = openlib(path))))
@@ -143,9 +144,9 @@ METAMOD_PLUGIN *_GetPluginPtr(const char *path, const int fail_api)
 		DWORD err = GetLastError();
 
 		if (FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, err,
-		                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), s_FailPlugin.error_buffer,
-		                   sizeof(s_FailPlugin.error_buffer), nullptr)
-		    == 0)
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), s_FailPlugin.error_buffer,
+			sizeof(s_FailPlugin.error_buffer), nullptr)
+			== 0)
 		{
 			UTIL_Format(s_FailPlugin.error_buffer, sizeof(s_FailPlugin.error_buffer), "unknown error %x", err);
 		}
@@ -156,7 +157,7 @@ METAMOD_PLUGIN *_GetPluginPtr(const char *path, const int fail_api)
 		return reinterpret_cast<METAMOD_PLUGIN*>(&s_FailPlugin);
 	}
 
-	if (!((fn=reinterpret_cast<METAMOD_FN_ORIG_LOAD>(findsym(g_hCore, "CreateInterface")))))
+	if (!((fn = reinterpret_cast<METAMOD_FN_ORIG_LOAD>(findsym(g_hCore, "CreateInterface")))))
 	{
 		goto error;
 	}
@@ -174,9 +175,9 @@ error:
 	return nullptr;
 }
 
-DLL_EXPORT METAMOD_PLUGIN *CreateInterface_MMS(const MetamodVersionInfo *mvi, const MetamodLoaderInfo *mli)
+DLL_EXPORT METAMOD_PLUGIN* CreateInterface_MMS(const MetamodVersionInfo* mvi, const MetamodLoaderInfo* mli)
 {
-	const char *filename;
+	const char* filename = nullptr;
 
 	load_attempted = true;
 
@@ -187,149 +188,149 @@ DLL_EXPORT METAMOD_PLUGIN *CreateInterface_MMS(const MetamodVersionInfo *mvi, co
 
 	switch (mvi->source_engine)
 	{
-	case SOURCE_ENGINE_ORIGINAL:
-	case SOURCE_ENGINE_EPISODEONE:
-	{
-		filename = FILENAME_1_6_EP1;
-		break;
-	}
-	case SOURCE_ENGINE_ORANGEBOX:
-	{
-		filename = FILENAME_1_6_EP2;
-		break;
-	}
-	case SOURCE_ENGINE_LEFT4DEAD:
-	{
-		filename = FILENAME_1_6_L4D;
-		break;
-	}
-	case SOURCE_ENGINE_DARKMESSIAH:
-	{
-		filename = FILENAME_1_6_DARKM;
-		break;
-	}
-	case SOURCE_ENGINE_LEFT4DEAD2:
-	{
-		const char *gamedir = mvi->GetGameDir();
-		if (strcmp(gamedir, "nucleardawn") == 0)
+		case SOURCE_ENGINE_ORIGINAL:
+		case SOURCE_ENGINE_EPISODEONE:
+		{
+			filename = FILENAME_1_6_EP1;
+			break;
+		}
+		case SOURCE_ENGINE_ORANGEBOX:
+		{
+			filename = FILENAME_1_6_EP2;
+			break;
+		}
+		case SOURCE_ENGINE_LEFT4DEAD:
+		{
+			filename = FILENAME_1_6_L4D;
+			break;
+		}
+		case SOURCE_ENGINE_DARKMESSIAH:
+		{
+			filename = FILENAME_1_6_DARKM;
+			break;
+		}
+		case SOURCE_ENGINE_LEFT4DEAD2:
+		{
+			const char* gamedir = mvi->GetGameDir();
+			if (strcmp(gamedir, "nucleardawn") == 0)
+			{
+				filename = FILENAME_1_6_ND;
+			}
+			else
+			{
+				filename = FILENAME_1_6_L4D2;
+			}
+			break;
+		}
+		case SOURCE_ENGINE_NUCLEARDAWN:
 		{
 			filename = FILENAME_1_6_ND;
+			break;
 		}
-		else
+		case SOURCE_ENGINE_CONTAGION:
 		{
-			filename = FILENAME_1_6_L4D2;
+			filename = FILENAME_1_6_CONTAGION;
+			break;
 		}
-		break;
-	}
-	case SOURCE_ENGINE_NUCLEARDAWN:
-	{
-		filename = FILENAME_1_6_ND;
-		break;
-	}
-	case SOURCE_ENGINE_CONTAGION:
-	{
-		filename = FILENAME_1_6_CONTAGION;
-		break;
-	}
-	case SOURCE_ENGINE_ALIENSWARM:
-	{
-		filename = FILENAME_1_6_SWARM;
-		break;
-	}
-	case SOURCE_ENGINE_BLOODYGOODTIME:
-	{
-		filename = FILENAME_1_6_BGT;
-		break;
-	}
-	case SOURCE_ENGINE_EYE:
-	{
-		filename = FILENAME_1_6_EYE;
-		break;
-	}
-	case SOURCE_ENGINE_PORTAL2:
-	{
-		filename = FILENAME_1_6_PORTAL2;
-		break;
-	}
-	case SOURCE_ENGINE_CSGO:
-	{
-		filename = FILENAME_1_6_CSGO;
-		break;
-	}
-	case SOURCE_ENGINE_CSS:
-	{
-		filename = FILENAME_1_6_CSS;
-		break;
-	}
-	case SOURCE_ENGINE_HL2DM:
-	{
-		filename = FILENAME_1_6_HL2DM;
-		break;
-	}
-	case SOURCE_ENGINE_DODS:
-	{
-		filename = FILENAME_1_6_DODS;
-		break;
-	}
-	case SOURCE_ENGINE_SDK2013:
-	{
-		filename = FILENAME_1_6_SDK2013;
-		break;
-	}
-	case SOURCE_ENGINE_BMS:
-	{
-		const char* gamedir = mvi->GetGameDir();
-		if (strcmp(gamedir, "bms") == 0)
+		case SOURCE_ENGINE_ALIENSWARM:
 		{
-			filename = FILENAME_1_6_BMS;
+			filename = FILENAME_1_6_SWARM;
+			break;
 		}
-		break;
-	}
-	case SOURCE_ENGINE_TF2:
-	{
-		filename = FILENAME_1_6_TF2;
-		break;
-	}
-	case SOURCE_ENGINE_ORANGEBOXVALVE_DEPRECATED:
-	{
-		const char *gamedir = mvi->GetGameDir();
-		if (strcmp(gamedir, "tf") == 0)
+		case SOURCE_ENGINE_BLOODYGOODTIME:
 		{
-			filename = FILENAME_1_6_TF2;
+			filename = FILENAME_1_6_BGT;
+			break;
 		}
-		else if (strcmp(gamedir, "dod") == 0)
+		case SOURCE_ENGINE_EYE:
 		{
-			filename = FILENAME_1_6_DODS;
+			filename = FILENAME_1_6_EYE;
+			break;
 		}
-		else if (strcmp(gamedir, "hl2mp") == 0)
+		case SOURCE_ENGINE_PORTAL2:
+		{
+			filename = FILENAME_1_6_PORTAL2;
+			break;
+		}
+		case SOURCE_ENGINE_CSGO:
+		{
+			filename = FILENAME_1_6_CSGO;
+			break;
+		}
+		case SOURCE_ENGINE_CSS:
+		{
+			filename = FILENAME_1_6_CSS;
+			break;
+		}
+		case SOURCE_ENGINE_HL2DM:
 		{
 			filename = FILENAME_1_6_HL2DM;
+			break;
 		}
-		else
+		case SOURCE_ENGINE_DODS:
+		{
+			filename = FILENAME_1_6_DODS;
+			break;
+		}
+		case SOURCE_ENGINE_SDK2013:
+		{
+			filename = FILENAME_1_6_SDK2013;
+			break;
+		}
+		case SOURCE_ENGINE_BMS:
+		{
+			const char* gamedir = mvi->GetGameDir();
+			if (strcmp(gamedir, "bms") == 0)
+			{
+				filename = FILENAME_1_6_BMS;
+			}
+			break;
+		}
+		case SOURCE_ENGINE_TF2:
+		{
+			filename = FILENAME_1_6_TF2;
+			break;
+		}
+		case SOURCE_ENGINE_ORANGEBOXVALVE_DEPRECATED:
+		{
+			const char* gamedir = mvi->GetGameDir();
+			if (strcmp(gamedir, "tf") == 0)
+			{
+				filename = FILENAME_1_6_TF2;
+			}
+			else if (strcmp(gamedir, "dod") == 0)
+			{
+				filename = FILENAME_1_6_DODS;
+			}
+			else if (strcmp(gamedir, "hl2mp") == 0)
+			{
+				filename = FILENAME_1_6_HL2DM;
+			}
+			else
+			{
+				return nullptr;
+			}
+			break;
+		}
+		case SOURCE_ENGINE_BLADE:
+		{
+			filename = FILENAME_1_6_BLADE;
+			break;
+		}
+		case SOURCE_ENGINE_INSURGENCY:
+		{
+			filename = FILENAME_1_6_INSURGENCY;
+			break;
+		}
+		case SOURCE_ENGINE_DOI:
+		{
+			filename = FILENAME_1_6_DOI;
+			break;
+		}
+		default:
 		{
 			return nullptr;
 		}
-		break;
-	}
-	case SOURCE_ENGINE_BLADE:
-	{
-		filename = FILENAME_1_6_BLADE;
-		break;
-	}
-	case SOURCE_ENGINE_INSURGENCY:
-	{
-		filename = FILENAME_1_6_INSURGENCY;
-		break;
-	}
-	case SOURCE_ENGINE_DOI:
-	{
-		filename = FILENAME_1_6_DOI;
-		break;
-	}
-	default:
-	{
-		return nullptr;
-	}
 	}
 
 	char abspath[256];
@@ -369,12 +370,12 @@ extern "C" void __cxa_pure_virtual(void)
 {
 }
 
-void *operator new(size_t size)
+void *operator new(std::size_t size)
 {
 	return malloc(size);
 }
 
-void *operator new[](size_t size)
+void *operator new[](std::size_t size)
 {
 	return malloc(size);
 }

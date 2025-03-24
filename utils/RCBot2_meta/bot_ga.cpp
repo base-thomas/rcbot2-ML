@@ -39,9 +39,9 @@
 #include <random>
 
 //caxanga334: SDK 2013 contains macros for std::min and std::max which causes errors when compiling
-#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
+//#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
 #include "valve_minmax_off.h"
-#endif
+//#endif
 
 #include "logging.h"
 
@@ -54,8 +54,12 @@ const float CGA::g_fMaxPerturbation = 0.3f;
 // POPULATION
 ////////////////////
 
-IIndividual* CPopulation::get(const int iIndex) const
+IIndividual* CPopulation::get(const std::size_t iIndex) const
 {
+	if (iIndex >= m_theIndividuals.size())
+	{
+		logger->Log(LogLevel::WARN, "GA Error: Index out of range");
+	}
 	return m_theIndividuals[iIndex];
 }
 
@@ -78,9 +82,9 @@ ga_nn_value CPopulation::totalFitness() const
 {
 	float fTotalFitness = 0.0f;
 
-	for (unsigned i = 0; i < size(); i++)
+	for (IIndividual* const& individual : m_theIndividuals)
 	{
-		fTotalFitness += m_theIndividuals[i]->getFitness();
+		fTotalFitness += individual->getFitness();
 	}
 
 	return fTotalFitness;
@@ -213,9 +217,16 @@ IIndividual* CRouletteSelection::select(CPopulation* population)
 
 	ga_nn_value fFitnessSoFar = 0.0f;
 
-	for (unsigned i = 0; i < population->size(); i++)
+	for (std::size_t i = 0; i < population->size(); i++)
 	{
-        IIndividual* individual = population->get(static_cast<int>(i));
+		// Ensure the index is within the range of int [APG]RoboCop[CL]
+		if (i > static_cast<std::size_t>(std::numeric_limits<int>::max()))
+		{
+			logger->Log(LogLevel::ERROR, "GA Error: Index exceeds the range of int. Aborting operation.");
+			return nullptr; // Or handle the error appropriately
+		}
+
+		IIndividual* individual = population->get(i);
 
 		fFitnessSoFar += individual->getFitness();
 

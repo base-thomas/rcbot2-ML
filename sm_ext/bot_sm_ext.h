@@ -17,11 +17,11 @@ class RCBotSourceModExt : public SourceMod::IExtensionInterface
 {
 public:
 	virtual ~RCBotSourceModExt() = default;
-	bool OnExtensionLoad(IExtension *me, IShareSys *sys, char* error, size_t maxlength, bool late) override;
+	bool OnExtensionLoad(IExtension *me, IShareSys *sys, char* error, std::size_t maxlength, bool late) override;
 	void OnExtensionUnload() override;
 	void OnExtensionsAllLoaded() override;
 	void OnExtensionPauseChange(bool pause) override;
-	bool QueryRunning(char *error, size_t maxlength) override;
+	bool QueryRunning(char *error, std::size_t maxlength) override;
 	bool IsMetamodExtension() override;
 	const char *GetExtensionName() override;
 	const char *GetExtensionURL() override;
@@ -34,8 +34,8 @@ public:
 	virtual void LateLoadExtensions();
 };
 
-bool SM_AcquireInterfaces(char *error, size_t maxlength);
-bool SM_LoadExtension(char *error, size_t maxlength);
+bool SM_AcquireInterfaces(char *error, std::size_t maxlength);
+bool SM_LoadExtension(char *error, std::size_t maxlength);
 void SM_UnloadExtension();
 void SM_UnsetInterfaces();
 

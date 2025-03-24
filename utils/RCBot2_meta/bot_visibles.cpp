@@ -45,9 +45,9 @@
 #include <cstring>
 
 //caxanga334: SDK 2013 contains macros for std::min and std::max which causes errors when compiling
-#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
+//#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
 #include "valve_minmax_off.h"
-#endif
+//#endif
 
 extern IVDebugOverlay *debugoverlay;
 ////////////////////////////////////////////
@@ -110,7 +110,7 @@ CBotVisibles :: CBotVisibles ( CBot *pBot )
 	m_pBot = pBot;
 	m_iMaxIndex = m_pBot->maxEntityIndex();
 	m_iMaxSize = m_iMaxIndex/8+1;
-	m_iIndicesVisible = new unsigned char[static_cast<size_t>(m_iMaxSize)];
+	m_iIndicesVisible = new unsigned char[m_iMaxSize];
 	reset();
 }
 
@@ -169,7 +169,7 @@ void CBotVisibles::debugString(char* string)
 @param  iIndex      saves recalling INDEXENT
 */
 
-void CBotVisibles::checkVisible(edict_t* pEntity, int* iTicks, bool* bVisible, const int& iIndex, const bool bCheckHead) const
+void CBotVisibles::checkVisible(edict_t* pEntity, int* iTicks, bool* bVisible, const int iIndex, const bool bCheckHead) const
 {
 	// reset
     *bVisible = false;
@@ -373,7 +373,7 @@ void CBotVisibles::updateVisibles()
 bool CBotVisibles::isVisible(const edict_t* pEdict) const
 {
     const int iIndex = ENTINDEX(pEdict) - 1;
-    const int iByte = iIndex / 8;
+    const std::size_t iByte = static_cast<std::size_t>(iIndex / 8); // Use size_t for indexing [APG]RoboCop[CL]
     const int iBit = iIndex % 8;
 
     if (iIndex < 0 || iByte > m_iMaxSize)
@@ -385,7 +385,7 @@ bool CBotVisibles::isVisible(const edict_t* pEdict) const
 void CBotVisibles::setVisible(edict_t* pEdict, const bool bVisible)
 {
     const int iIndex = ENTINDEX(pEdict) - 1;
-    const int iByte = iIndex / 8;
+	const std::size_t iByte = static_cast<std::size_t>(iIndex / 8); // Use size_t for indexing [APG]RoboCop[CL]
     const int iBit = iIndex % 8;
     const int iFlag = 1 << iBit;
 

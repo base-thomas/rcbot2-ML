@@ -68,9 +68,9 @@ cell_t sm_RCBotSetProfileFloat(IPluginContext *pContext, const cell_t *params) {
 
 	const CBot* bot = CBots::getBot(client - 1);
 	if (!bot) {
-		pContext->ThrowNativeError("Client index %d is not a RCBot", client);
+		return pContext->ThrowNativeError("Client index %d is not a RCBot", client);
 	}
-	
+
 	CBotProfile* profile = bot->getProfile();
 	float* value = GetFloatProperty(profile, profileVar);
 	if (!value) {

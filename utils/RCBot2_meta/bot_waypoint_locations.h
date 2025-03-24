@@ -69,7 +69,7 @@ public:
 	static constexpr int HALF_MAX_MAP_SIZE = 16384; // need to know half (negative + positive halves = max)
 	/*
 	// want bucket spacing of 256 units
-	static const int MAX_WPT_BUCKETS = 128;
+	static constexpr int MAX_WPT_BUCKETS = 128;
 	*/
 	// want bucket spacing of 512 units
 	static constexpr int MAX_WPT_BUCKETS = 64;

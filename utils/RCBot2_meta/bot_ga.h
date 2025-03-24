@@ -68,10 +68,10 @@ public:
 	void setGA ( CGA *ga ) { m_ga = ga; }
 
 	// size of population
-	unsigned size () const { return m_theIndividuals.size(); }
+	std::size_t size() const { return m_theIndividuals.size(); }
 
 	// get from population index
-	IIndividual *get ( int iIndex ) const;
+	IIndividual *get (std::size_t iIndex) const;
 
 	// add individual to population
 	void add ( IIndividual *individual );
@@ -109,12 +109,12 @@ class CGA
 {
 public:
 
-	CGA (const int iMaxPopSize=0)
+	CGA (const std::size_t iMaxPopSize=0)
 	{
 		init(iMaxPopSize);
 	}
 
-	void init (const int iMaxPopSize=0)
+	void init (const std::size_t iMaxPopSize=0)
 	{
 		m_theSelectFunction = new CRouletteSelection();
 
@@ -146,7 +146,7 @@ public:
 
 	std::unique_ptr<IIndividual> pick();
 
-	unsigned m_iMaxPopSize;
+	std::size_t m_iMaxPopSize;
 	static const int g_iDefaultMaxPopSize;
 	static const float g_fCrossOverRate;
 	static const float g_fMutateRate;

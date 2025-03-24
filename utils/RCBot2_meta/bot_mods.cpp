@@ -50,7 +50,7 @@
 
 #include "rcbot/logging.h"
 
-#ifdef _WIN32
+#if defined(_WIN64) || defined(_WIN32)
 #define strcmpi _strcmpi
 #endif 
 
@@ -85,7 +85,7 @@ void CBotMods::parseFile()
 		if (buffer[0] == '#')
 			continue;
 
-		size_t len = std::strlen(buffer);
+		std::size_t len = std::strlen(buffer);
 
 		if (len == 0)
 			continue;
@@ -93,8 +93,8 @@ void CBotMods::parseFile()
 		if (buffer[len - 1] == '\n')
 			buffer[--len] = 0;
 
-		size_t i = 0;
-		size_t j = 0;
+		std::size_t i = 0;
+		std::size_t j = 0;
 
 		while (i < len && buffer[i] != '=')
 		{

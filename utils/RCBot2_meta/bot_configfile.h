@@ -80,7 +80,7 @@ public:
 
 private:
 	static std::vector<char *> m_Commands;
-	static unsigned m_iCmd; // current command (time delayed)
+	static std::size_t m_iCmd; // current command (time delayed)
 	static float m_fNextCommandTime;
 };
 

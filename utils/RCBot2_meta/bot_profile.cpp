@@ -50,8 +50,8 @@ CBotProfile :: CBotProfile (const CBotProfile &other)
 }
 
 CBotProfile :: CBotProfile (
-		const char *szName, 
-		const char *szModel,
+		const char* szName, 
+		const char* szModel,
 		const int iTeam,
 		const int iVisionTicks,
 		const int iPathTicks,
@@ -176,18 +176,18 @@ CBotProfile *CBotProfiles :: getDefaultProfile ()
 }
 
 // return a profile unused by a bot
-CBotProfile *CBotProfiles :: getRandomFreeProfile ()
+CBotProfile* CBotProfiles::getRandomFreeProfile()
 {
 	std::vector<CBotProfile*> freeProfiles;
-	
+
 	for (CBotProfile*& m_Profile : m_Profiles)
 	{
-		if ( !CBots::findBotByProfile(m_Profile) )
+		if (!CBots::findBotByProfile(m_Profile))
 			freeProfiles.emplace_back(m_Profile);
 	}
 
-	if ( freeProfiles.empty() )
+	if (freeProfiles.empty())
 		return nullptr;
 
-	return freeProfiles[randomInt(0, static_cast<int>(freeProfiles.size()) - 1)];
+	return freeProfiles[static_cast<std::size_t>(randomInt(0, static_cast<int>(freeProfiles.size()) - 1))];
 }

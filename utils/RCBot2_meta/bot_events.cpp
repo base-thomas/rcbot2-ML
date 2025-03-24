@@ -420,9 +420,7 @@ void CWeaponFireEvent :: execute ( IBotEventInterface *pEvent )
 
 void CPlayerSpawnEvent :: execute ( IBotEventInterface *pEvent )
 {
-	CBot *pBot = CBots::getBotPointer(m_pActivator);
-
-	if ( pBot )
+	if ( CBot *pBot = CBots::getBotPointer(m_pActivator) )
 		pBot->spawnInit();
 
 	#if SOURCE_ENGINE == SE_TF2
@@ -436,9 +434,7 @@ void CPlayerSpawnEvent :: execute ( IBotEventInterface *pEvent )
 
 void CBulletImpactEvent :: execute ( IBotEventInterface *pEvent )
 {
-	CBot *pBot = CBots::getBotPointer(m_pActivator);
-
-	if ( pBot )
+	if ( CBot *pBot = CBots::getBotPointer(m_pActivator) )
 	{
 		pBot->shotmiss();
 	}
@@ -463,9 +459,8 @@ void CTF2ObjectSapped :: execute ( IBotEventInterface *pEvent )
 		edict_t *pSpy = m_pActivator;
 		const edict_t *pOwner = CBotGlobals::playerByUserId(owner);
 		edict_t *pSapper = INDEXENT(sapperid);
-		CBotTF2 *pBot = static_cast<CBotTF2*>(CBots::getBotPointer(pOwner));
-		
-		if ( pBot )
+
+		if ( CBotTF2 *pBot = static_cast<CBotTF2*>(CBots::getBotPointer(pOwner)) )
 		{
 			pBot->buildingSapped(static_cast<eEngiBuild>(building),pSapper,pSpy);
 		}
@@ -512,9 +507,7 @@ void CPlayerTeleported ::execute(IBotEventInterface *pEvent)
 	{
 		const edict_t *pPlayer = CBotGlobals::playerByUserId(builderid);
 
-		CBot *pBot = CBots::getBotPointer(pPlayer);
-
-		if ( pBot )
+		if ( CBot *pBot = CBots::getBotPointer(pPlayer) )
 		{
 			static_cast<CBotTF2*>(pBot)->teleportedPlayer();
 		}
@@ -536,9 +529,7 @@ void CPlayerHealed ::execute(IBotEventInterface *pEvent)
 
 		if ( m_pActivator )
 		{
-			CBot *pBot = CBots::getBotPointer(m_pActivator);
-
-			if ( pBot )
+			if ( CBot *pBot = CBots::getBotPointer(m_pActivator) )
 			{
 				CBotTF2 *pBotTF2 = static_cast<CBotTF2*>(pBot);
 
@@ -587,18 +578,15 @@ void CTF2ObjectDestroyed :: execute ( IBotEventInterface *pEvent )
 			{
 				edict_t *pOwner = pAttacker;
 				edict_t *pSapper = INDEXENT(index);
-				const CBotTF2 *pBot = static_cast<CBotTF2*>(CBots::getBotPointer(pOwner));
 
-				if ( pBot )
+				if ( const CBotTF2 *pBot = static_cast<CBotTF2*>(CBots::getBotPointer(pOwner)) )
 					pBot->sapperDestroyed(pSapper);
 
 				CTeamFortress2Mod::sapperDestroyed(pOwner,static_cast<eEngiBuild>(type),pSapper);
 			}
 			else
 			{
-				CBotTF2 *pBot = static_cast<CBotTF2*>(CBots::getBotPointer(m_pActivator));
-
-				if ( pBot )
+				if ( CBotTF2 *pBot = static_cast<CBotTF2*>(CBots::getBotPointer(m_pActivator)) )
 				{
 					edict_t *pBuilding = INDEXENT(index);
 
@@ -616,9 +604,7 @@ void CPostInventoryApplicationTF2 :: execute ( IBotEventInterface *pEvent )
 
 	const edict_t *pEdict = CBotGlobals::playerByUserId(iUserID);
 
-	CBot *pBot = CBots::getBotPointer(pEdict);
-
-	if ( pBot )
+	if ( CBot *pBot = CBots::getBotPointer(pEdict) )
 	{
 		pBot->onInventoryApplication();
 	}
@@ -849,12 +835,11 @@ void CTF2PointStartCapture :: execute ( IBotEventInterface *pEvent )
 */
 	const int capteam = pEvent->getInt("capteam",0);
 	const int capindex = pEvent->getInt("cp",0);
-	const char *cappers = pEvent->getString("cappers", nullptr);
-//	const char *cpname = pEvent->getString("cpname");
+	//	const char *cpname = pEvent->getString("cpname");
 
-	if ( cappers )
+	if ( const char *cappers = pEvent->getString("cappers", nullptr) )
 	{
-		int i = 0;
+		std::size_t i = 0; // Use std::size_t for the index type [APG]RoboCop[CL]
 
 		while ( cappers[i] != 0 )
 		{
@@ -953,9 +938,7 @@ void CFlagEvent :: execute ( IBotEventInterface *pEvent )
 		{
 			if( pPlayer )
 			{
-				IPlayerInfo* p = playerinfomanager->GetPlayerInfo(pPlayer);
-
-				if ( p )
+				if ( IPlayerInfo* p = playerinfomanager->GetPlayerInfo(pPlayer) )
 				{
 					CBroadcastFlagCaptured captured = CBroadcastFlagCaptured(p->GetTeamIndex());
 					CBots::botFunction(&captured);
@@ -1132,9 +1115,7 @@ void CDODChangeClass :: execute ( IBotEventInterface *pEvent )
 {
 	if ( m_pActivator )
 	{
-		CBot *pBot = CBots::getBotPointer(m_pActivator);
-
-		if ( pBot )
+		if ( CBot *pBot = CBots::getBotPointer(m_pActivator) )
 		{
 			CDODBot *pDODBot = static_cast<CDODBot*>(pBot);
 

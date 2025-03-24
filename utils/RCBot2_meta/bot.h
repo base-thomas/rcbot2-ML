@@ -60,6 +60,7 @@
 #endif
 #include "igameevents.h"
 #include "Color.h"
+class CBasePlayer; // forward declaration required by imovehelper.h (included by usercmd.h) -caxanga334
 #include "usercmd.h"
 
 #include "bot_utility.h"
@@ -70,7 +71,7 @@
 #include <bitset>
 #include <limits>
 
-#if defined WIN32 && !defined snprintf
+#if defined(_WIN64) || defined(_WIN32) && !defined snprintf
 #define snprintf _snprintf
 #endif
 
@@ -660,15 +661,15 @@ public:
 
     CBotProfile *getProfile () const { return m_pProfile; }
 
-	virtual bool canGotoWaypoint ( Vector vPrevWaypoint, CWaypoint *pWaypoint, CWaypoint *pPrev = nullptr);
+	virtual bool canGotoWaypoint (Vector vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev = nullptr);
 	
 	void updatePosition() const;
 
 	void tapButton ( int iButton ) const;
 
-	int getAmmo(const size_t iIndex) const {
+	int getAmmo(const std::size_t iIndex) const {
 		if (!m_iAmmo) return 0;
-		if (iIndex == static_cast<size_t>(-1)) return 0;
+		if (iIndex == static_cast<std::size_t>(-1)) return 0; // Ensure this check is meaningful
 		return m_iAmmo[iIndex];
 	}
 
@@ -750,7 +751,7 @@ public:
 	// bot is defending -- mod specific stuff
 	virtual void defending () {}
 
-	virtual void hearVoiceCommand ( edict_t *pPlayer, byte cmd );
+	virtual void hearVoiceCommand ( edict_t *pPlayer, byte voiceCmd );
 
 	virtual void grenadeThrown ();
 
@@ -886,7 +887,7 @@ protected:
 	float m_fAvoidTime;
 	///////////////////////////////////
 	// current impulse command
-	int m_iImpulse;
+	byte m_iImpulse;
 	// buttons held
 	int m_iButtons;
 	// bots forward move speed
@@ -1079,7 +1080,7 @@ public:
 
 	static void roundStart ();
 
-	static void kickRandomBot (size_t count = 1);
+	static void kickRandomBot (unsigned count = 1);
 	static void kickRandomBotOnTeam ( int team );
 
 	static void mapInit ();
@@ -1097,8 +1098,13 @@ public:
 
 	static void runPlayerMoveAll ();
 
-	static CBot* get(const size_t iIndex) { return m_Bots[iIndex]; }
-	static CBot *get (const edict_t *pPlayer ) { return m_Bots[slotOfEdict(pPlayer)]; }
+	static CBot* get(const std::size_t iIndex) { return m_Bots[iIndex]; }
+
+	static CBot* get(const edict_t* pPlayer)
+	{
+		return m_Bots[static_cast<std::size_t>(slotOfEdict(pPlayer))];
+	}
+
 	static int levelInit(); //TODO: Not implemented? [APG]RoboCop[CL]
 
 private:
@@ -1123,7 +1129,7 @@ public:
 	//virtual ~IEntityFactory() = default; //Unstable
 	virtual IServerNetworkable *Create( const char *pClassName ) = 0;
 	virtual void Destroy( IServerNetworkable *pNetworkable ) = 0;
-	virtual size_t GetEntitySize() = 0;
+	virtual unsigned GetEntitySize() = 0;
 };
 
 abstract_class IEntityFactoryDictionary

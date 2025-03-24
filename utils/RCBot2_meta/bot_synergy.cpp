@@ -121,8 +121,7 @@ bool CBotSynergy::needAmmo()
 		return false;
 	}
 
-	const CBotWeapon* weapon = m_pWeapons->getWeapon(CWeapons::getWeapon(m_pCurrentWeapon->GetClassName()));
-	if (weapon)
+	if (const CBotWeapon* weapon = m_pWeapons->getWeapon(CWeapons::getWeapon(m_pCurrentWeapon->GetClassName())))
 	{
 		const int iAmmo = weapon->getAmmo(this); // Current weapon reserve ammo
 
@@ -625,9 +624,7 @@ bool CBotSynergy::executeAction(const eBotAction iAction)
 		else
 			removeCondition(CONDITION_COVERT);
 
-		CWaypoint* pWaypoint = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_GOAL);
-
-		if (pWaypoint)
+		if (CWaypoint* pWaypoint = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_GOAL))
 		{
 			CBotTask* pFindPath;
 			CWaypoint* pRoute = CWaypoints::randomRouteWaypoint(this, getOrigin(), pWaypoint->getOrigin(), 0, 0);
@@ -670,9 +667,7 @@ bool CBotSynergy::executeAction(const eBotAction iAction)
 		else
 			removeCondition(CONDITION_COVERT);
 
-		CWaypoint* pWaypoint = CWaypoints::randomWaypointGoal(-1);
-
-		if (pWaypoint)
+		if (CWaypoint* pWaypoint = CWaypoints::randomWaypointGoal(-1))
 		{
 			CBotTask* pFindPath;
 			CWaypoint* pRoute = CWaypoints::randomRouteWaypoint(this, getOrigin(), pWaypoint->getOrigin(), 0, 0);

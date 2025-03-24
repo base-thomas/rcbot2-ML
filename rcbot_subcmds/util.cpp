@@ -94,11 +94,9 @@ CBotCommandInline TeleportUtilCommand("teleport", CMD_ACCESS_UTIL, [](CClient* p
 
 CBotCommandInline NoClipCommand("noclip", CMD_ACCESS_UTIL, [](const CClient* pClient, const BotCommandArgs& args)
 {
-	edict_t* pEntity = pClient ? pClient->getPlayer() : nullptr;
-
-	if (pEntity)
+	if (edict_t* pEntity = pClient ? pClient->getPlayer() : nullptr)
 	{
-		constexpr size_t bufferSize = 256; // Adjust the buffer size as needed - [APG]RoboCop[CL]
+		constexpr unsigned bufferSize = 256; // Adjust the buffer size as needed - [APG]RoboCop[CL]
 		std::string msg(bufferSize, '\0');
 
 		byte* movetype = CClassInterface::getMoveTypePointer(pEntity);
@@ -126,15 +124,11 @@ CBotCommandInline GodModeUtilCommand("god", CMD_ACCESS_UTIL, [](const CClient* p
 {
 	if (pClient)
 	{
-		edict_t* pEntity = pClient->getPlayer();
-
-		if (pEntity)
+		if (edict_t* pEntity = pClient->getPlayer())
 		{
-			int* playerflags = CClassInterface::getPlayerFlagsPointer(pEntity);
-
-			if (playerflags)
+			if (int* playerflags = CClassInterface::getPlayerFlagsPointer(pEntity))
 			{
-				constexpr size_t bufferSize = 256;
+				constexpr unsigned bufferSize = 256;
 				std::string msg(bufferSize, '\0');
 
 				if (*playerflags & FL_GODMODE)
@@ -159,15 +153,11 @@ CBotCommandInline NoTouchCommand("notouch", CMD_ACCESS_UTIL, [](const CClient* p
 {
 	if (pClient)
 	{
-		edict_t* pEntity = pClient->getPlayer();
-
-		if (pEntity)
+		if (edict_t* pEntity = pClient->getPlayer())
 		{
-			int* playerflags = CClassInterface::getPlayerFlagsPointer(pEntity);
-
-			if (playerflags)
+			if (int* playerflags = CClassInterface::getPlayerFlagsPointer(pEntity))
 			{
-				constexpr size_t bufferSize = 256; // Adjust the buffer size as needed - [APG]RoboCop[CL]
+				constexpr unsigned bufferSize = 256; // Adjust the buffer size as needed - [APG]RoboCop[CL]
 				std::string msg(bufferSize, '\0');
 
 				if (*playerflags & FL_DONTTOUCH)

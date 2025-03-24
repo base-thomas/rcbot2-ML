@@ -49,9 +49,9 @@
 #include <cstring>
 
  //Ignores the min/max macros in the windows headers
-#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
+//#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
 #include "valve_minmax_off.h"
-#endif
+//#endif
 
 edict_t *CDODMod::m_pResourceEntity = nullptr;
 CDODFlags CDODMod::m_Flags;
@@ -112,16 +112,16 @@ bool CDODMod :: checkWaypointForTeam(CWaypoint *pWpt, const int iTeam)
 bool CDODMod :: shouldAttack (const int iTeam)
 // uses the perceptron to return probability of attack
 {
-	static short iFlags_0;
-	static short iFlags_1;
-	static short iNumFlags;
+	static int iFlags_0;
+	static int iFlags_1;
+	static int iNumFlags;
 
-	//TODO: Improve on the integer and floating point precision conversion [APG]RoboCop[CL]
 	iNumFlags = m_Flags.getNumFlags();
 
-	iFlags_0 = static_cast<short>(m_Flags.getNumFlagsOwned(iTeam == TEAM_ALLIES ? TEAM_AXIS : TEAM_ALLIES) /
-		iNumFlags * MAX_DOD_FLAGS);
-	iFlags_1 = static_cast<short>(m_Flags.getNumFlagsOwned(iTeam)) / (iNumFlags * MAX_DOD_FLAGS);
+	iFlags_0 = m_Flags.getNumFlagsOwned(iTeam == TEAM_ALLIES ? TEAM_AXIS : TEAM_ALLIES) /
+		(iNumFlags * MAX_DOD_FLAGS);
+
+	iFlags_1 = m_Flags.getNumFlagsOwned(iTeam) / (iNumFlags * MAX_DOD_FLAGS);
 
 	return randomFloat(0.0f,1.0f) < fAttackProbLookUp[iFlags_0][iFlags_1];//gNetAttackOrDefend->getOutput();
 }
@@ -176,7 +176,7 @@ void CDODMod::initMod()
 	tset.freeMemory();
 
 	CBotGlobals::botMessage(nullptr, 0, "... done!");
-///-------------------------------------------------
+	///-------------------------------------------------
 
     CWeapons::loadWeapons(m_szWeaponListName == nullptr ? "DOD" : m_szWeaponListName, DODWeaps.data());
 	//CWeapons::loadWeapons("DOD", DODWeaps);
@@ -338,7 +338,7 @@ bool CDODFlags::getRandomEnemyControlledFlag (const CBot *pBot, Vector *position
 	{
 		if ( m_iWaypoint[i] != -1 )
 		{
-			if ( m_pFlags[i] == nullptr || m_iOwner[i] == iTeam )
+			if (m_pFlags[i] == nullptr || m_iOwner[i] == iTeam)
 				continue;
 
 			if ( iTeam == TEAM_ALLIES && m_iAlliesReqCappers[i] == 0 )
@@ -752,9 +752,9 @@ int CDODMod ::getScore(edict_t *pPlayer)
 
 edict_t *CDODMod :: getBreakable (const CWaypoint *pWpt)
 {
-	const size_t size = m_BreakableWaypoints.size();
+	const std::size_t size = m_BreakableWaypoints.size();
 
-	for (size_t i = 0; i < size; i++)
+	for (std::size_t i = 0; i < size; i++)
 	{
 		if ( m_BreakableWaypoints[i].pWaypoint == pWpt )
 			return m_BreakableWaypoints[i].pEdict;
@@ -765,9 +765,9 @@ edict_t *CDODMod :: getBreakable (const CWaypoint *pWpt)
 
 edict_t *CDODMod :: getBombTarget (const CWaypoint *pWpt)
 {
-	const size_t size = m_BombWaypoints.size();
+	const std::size_t size = m_BombWaypoints.size();
 
-	for (size_t i = 0; i < size; i++)
+	for (std::size_t i = 0; i < size; i++)
 	{
 		if ( m_BombWaypoints[i].pWaypoint == pWpt )
 			return m_BombWaypoints[i].pEdict;
@@ -796,11 +796,11 @@ void CDODMod::roundStart()
 			m_iMapType |= DOD_MAPTYPE_BOMB;
 			/*
 			if ( m_iMapType == DOD_MAPTYPE_FLAG) 
-				CRCBotPlugin::HudTextMessage(CClients::get(0)->getPlayer(),"RCBot detected Flag map","RCBot2","RCbot2 detected a flag map");
+				CRCBotPlugin::HudTextMessage(CClients::get(0)->getPlayer(),"RCBot detected Flag map","RCBot2","RCBot2 detected a flag map");
 			else if ( m_iMapType == DOD_MAPTYPE_BOMB )
-				CRCBotPlugin::HudTextMessage(CClients::get(0)->getPlayer(),"RCBot detected bomb map","RCBot2","RCbot2 detected a bomb map");
+				CRCBotPlugin::HudTextMessage(CClients::get(0)->getPlayer(),"RCBot detected bomb map","RCBot2","RCBot2 detected a bomb map");
 			else if ( m_iMapType == 3 )
-				CRCBotPlugin::HudTextMessage(CClients::get(0)->getPlayer(),"RCBot detected flag map with bombs ","RCBot2","RCbot2 detected a flag capture map with bombs");
+				CRCBotPlugin::HudTextMessage(CClients::get(0)->getPlayer(),"RCBot detected flag map with bombs ","RCBot2","RCBot2 detected a flag capture map with bombs");
 			*/
 
 			const CWaypoint* pWaypointAllies = CWaypoints::randomWaypointGoal(CWaypointTypes::W_FL_BOMBS_HERE,TEAM_ALLIES);

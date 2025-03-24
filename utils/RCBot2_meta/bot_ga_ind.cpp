@@ -62,16 +62,16 @@ void CBotGAValues::clear()
 // crossover with other individual
 void CBotGAValues::crossOver(IIndividual* other)
 {
-    const unsigned iPoint = randomInt(0, static_cast<int>(m_theValues.size()));
+    const std::size_t iPoint = randomInt(0, static_cast<int>(m_theValues.size()));
 
     CBotGAValues* vother = static_cast<CBotGAValues*>(other);
 
-    for (unsigned i = 0; i < iPoint; i++)
+    for (std::size_t i = 0; i < iPoint; i++)
     {
         std::swap(m_theValues[i], vother->m_theValues[i]);
     }
 
-    for (unsigned i = iPoint; i < m_theValues.size(); i++)
+    for (std::size_t i = iPoint; i < m_theValues.size(); i++)
     {
         std::swap(m_theValues[i], vother->m_theValues[i]);
     }
@@ -80,7 +80,7 @@ void CBotGAValues::crossOver(IIndividual* other)
 // mutate some values
 void CBotGAValues::mutate()
 {
-    for (unsigned i = 0; i < m_theValues.size(); i++)
+    for (std::size_t i = 0; i < m_theValues.size(); i++)
     {
         if (randomFloat(0, 1) < CGA::g_fMutateRate)
         {
@@ -91,12 +91,12 @@ void CBotGAValues::mutate()
     }
 }
 
-float CBotGAValues::get(const int iIndex) const
+float CBotGAValues::get(const std::size_t iIndex) const
 {
     return m_theValues[iIndex];
 }
 
-void CBotGAValues::set(const int iIndex, const float fVal)
+void CBotGAValues::set(const std::size_t iIndex, const float fVal)
 {
     m_theValues[iIndex] = fVal;
 }

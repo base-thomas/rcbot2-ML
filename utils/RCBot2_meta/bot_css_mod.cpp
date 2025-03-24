@@ -144,9 +144,7 @@ bool CCounterStrikeSourceMod::canHearPlantedBomb(const CBot *pBot)
     if(!isBombPlanted())
         return false;
 
-    edict_t *pBomb = getBomb();
-
-    if(pBomb)
+    if(edict_t *pBomb = getBomb())
     {
         return pBot->distanceFrom(pBomb) <= 2048.0f;
     }
@@ -200,8 +198,7 @@ void CCounterStrikeSourceMod::onFreezeTimeEnd()
 {
     logger->Log(LogLevel::TRACE, "CCounterStrikeSourceMod::OnFreezeTimeEnd()");
 
-    const edict_t *pC4 = CClassInterface::FindEntityByClassnameNearest(Vector(0.0f, 0.0f, 0.0f), "weapon_c4", 32000.0f);
-    if(pC4)
+    if(const edict_t *pC4 = CClassInterface::FindEntityByClassnameNearest(Vector(0.0f, 0.0f, 0.0f), "weapon_c4", 32000.0f))
     {
         m_hBomb.Init(engine->IndexOfEdict(pC4), pC4->m_NetworkSerialNumber);
     }
@@ -227,8 +224,7 @@ void CCounterStrikeSourceMod::onBombPlanted()
     m_fBombPlantedTime = engine->Time();
     m_hBomb.Term();
 
-    const edict_t *pPlantedC4 = CClassInterface::FindEntityByNetClass(gpGlobals->maxClients+1, "CPlantedC4");
-    if(pPlantedC4)
+    if(const edict_t *pPlantedC4 = CClassInterface::FindEntityByNetClass(gpGlobals->maxClients+1, "CPlantedC4"))
     {
         m_hBomb.Init(engine->IndexOfEdict(pPlantedC4), pPlantedC4->m_NetworkSerialNumber);
     }
@@ -318,9 +314,10 @@ edict_t *CCounterStrikeSourceMod::getRandomHostage()
         }
     }
 
-    if(!temp.empty())
-    {   
-        return INDEXENT(temp.at(randomInt(0, temp.size() - 1)).GetEntryIndex());
+    if (!temp.empty())
+    {
+        return INDEXENT(temp.at(static_cast<std::size_t>(randomInt(0, static_cast<int>(temp.size() - 1)))).GetEntryIndex());
     }
+
     return nullptr;
 }
