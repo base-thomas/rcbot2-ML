@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
  *    This file is part of RCBot.
  *
@@ -99,8 +101,7 @@ void CDODBot :: bombEvent ( int iEvent, const int iCP, const int iTeam )
 	}
 }
 
-CDODBot :: CDODBot() :
-	CBot()
+CDODBot :: CDODBot()
 {
 	CDODBot::init(true);
 }
@@ -131,7 +132,7 @@ void CDODBot :: freeMapMemory ()
 	CBot::freeMapMemory();
 }
 
-bool CDODBot::canGotoWaypoint(const Vector vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev)
+bool CDODBot::canGotoWaypoint(const Vector& vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev)
 {
 	if ( CBot::canGotoWaypoint(vPrevWaypoint,pWaypoint,pPrev) )
 	{
@@ -2334,7 +2335,7 @@ bool CDODBot :: executeAction ( CBotUtility *util )
 			else
 				iWaypointType = CWaypointTypes::W_FL_SNIPER;
 
-			if ( inSquad() && !isSquadLeader() )
+			if ( inSquad() && !isSquadLeader() && m_pSquad->IsSquadLeaderValid() )
 			{
 				edict_t *pSquadLeader = m_pSquad->GetLeader();
 				Vector vSquadLeaderOrigin = CBotGlobals::entityOrigin(pSquadLeader);
@@ -2456,7 +2457,7 @@ bool CDODBot :: executeAction ( CBotUtility *util )
 			if ( pWaypoint == nullptr)
 			{
 				bool defend_wpt = true; //Unused? [APG]RoboCop[CL]
-				defend_wpt = false;
+				//defend_wpt = false;
 
 				if ( distanceFrom(vGoal) > 1024 ) // outside waypoint bucket of goal
 					pWaypoint = CWaypoints::getPinchPointFromWaypoint(vGoal,vGoal);

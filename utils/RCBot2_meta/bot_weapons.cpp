@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
  *    This file is part of RCBot.
  *
@@ -924,9 +926,7 @@ CBotWeapon* CBotWeapons::getActiveWeapon(const char* szWeaponName, edict_t* pWea
 
 	if (szWeaponName && *szWeaponName)
 	{
-		const CWeapon* pWeapon = CWeapons::getWeapon(szWeaponName);
-
-		if (pWeapon)
+		if (const CWeapon* pWeapon = CWeapons::getWeapon(szWeaponName))
 		{
 			for (CBotWeapon& m_theWeapon : m_theWeapons)
 			{

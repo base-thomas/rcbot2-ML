@@ -72,7 +72,7 @@ public:
 	void listenForPlayers() override;
 	void freeMapMemory() override;
 	void touchedWpt(CWaypoint *pWaypoint, int iNextWaypoint = -1, int iPrevWaypoint = -1) override;
-	bool canGotoWaypoint(Vector vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev = nullptr) override;
+	bool canGotoWaypoint(const Vector& vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev = nullptr) override;
 	bool setVisible(edict_t *pEntity, bool bVisible) override;
 	virtual void modThinkSlow();
 	unsigned maxEntityIndex() override { return gpGlobals->maxEntities; }

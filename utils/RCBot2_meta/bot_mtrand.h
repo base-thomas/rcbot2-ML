@@ -74,6 +74,8 @@
 #ifndef MTRAND_H
 #define MTRAND_H
 
+#include <cstdint>
+
 int randomInt ( int imin, int imax );
 float randomFloat ( float fmin, float fmax );
 
@@ -108,10 +110,19 @@ static unsigned long twiddle(unsigned long, unsigned long); // used by gen_state
   void gen_state(); // generate new state
 };
 
+// Mask to isolate the most significant bit (MSB) in a 32-bit unsigned integer
+constexpr std::uint32_t MSB_MASK = 0x80000000UL;
+// Mask to represent all bits set in a 32-bit unsigned integer
+constexpr std::uint32_t BIT_MASK_32 = 0xFFFFFFFFUL;
+// Mask for all bits except the MSB
+constexpr std::uint32_t LSB_MASK = 0x7FFFFFFFUL;
+// Mersenne Twister constant
+constexpr std::uint32_t TEMPERING_CONSTANT = 0x9908B0DFUL;
+
 // inline for speed, must therefore reside in header file
 inline unsigned long MTRand_int32::twiddle(const unsigned long u, const unsigned long v) {
-	return ((u & 0x80000000UL) | (v & 0x7FFFFFFFUL)) >> 1
-		^ (v & 1UL ? 0x9908B0DFUL : 0x0UL);
+	return ((u & MSB_MASK) | (v & LSB_MASK)) >> 1
+		^ (v & 1UL ? TEMPERING_CONSTANT : 0x0UL);
 }
 
 inline unsigned long MTRand_int32::rand_int32() { // generate 32 bit random int

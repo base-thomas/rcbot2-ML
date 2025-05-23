@@ -19,6 +19,31 @@
 
 #include <cstdint>
 
+// Undefine potential conflicting macros
+#ifdef FATAL
+#undef FATAL
+#endif
+
+#ifdef ERROR
+#undef ERROR
+#endif
+
+#ifdef WARN
+#undef WARN
+#endif
+
+#ifdef INFO
+#undef INFO
+#endif
+
+#ifdef DEBUG
+#undef DEBUG
+#endif
+
+#ifdef TRACE
+#undef TRACE
+#endif
+
 /**
  * Log levels in ascending order.
  */

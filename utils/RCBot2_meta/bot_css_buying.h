@@ -140,12 +140,12 @@ private:
     eCSSBuyType determineBuyType();
     void processBuyList(std::queue<eCSSBuyItem> &queue);
 
-    CBot *m_pBot; // Bot pointer
-    int m_money; // Amount of money the bot have
+    CBot* m_pBot; // Bot pointer
+    CBotWeapon* m_pPrimaryWeapon; // Primary weapon
+    CBotWeapon* m_pSecondaryWeapon; // Secondary weapon
+    int m_money; // Amount of money the bot has
     int m_deaths; // How many times the bot died
     float m_fLastBuyTime; // The last time the bot bought something
-    CBotWeapon *m_pPrimaryWeapon; // Primary weapon
-    CBotWeapon *m_pSecondaryWeapon; // Secondary weapon
     eCSSBuyProfile m_eProfile; // Bot weapon preference profile
 };
 

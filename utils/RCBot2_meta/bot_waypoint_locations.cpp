@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
  *    This file is part of RCBot.
  *
@@ -214,7 +216,7 @@ void CWaypointLocations :: AutoPathInBucket ( edict_t *pPlayer, const int i, con
 	CWaypoint *pWpt = CWaypoints::getWaypoint(iWptFrom);
 	const Vector vWptOrigin = pWpt->getOrigin();
 
-	trace_t tr; //tr not used? [APG]RoboCop[CL]
+	//trace_t tr; //tr not used? [APG]RoboCop[CL]
 
 	//CTraceFilterWorldOnly filter;
 
@@ -451,7 +453,7 @@ void CWaypointLocations :: FindNearestBlastInBucket (const int i, const int j, c
 	float fDist;
 	//int iWptFlags;
 
-	trace_t tr; //tr not used? [APG]RoboCop[CL]
+	//trace_t tr; //tr not used? [APG]RoboCop[CL]
 
 	const WaypointList &arr = m_iLocations[i][j][k];
 	const std::size_t size = arr.size();
@@ -537,8 +539,8 @@ void CWaypointLocations :: FindNearestInBucket (const int i, const int j, const 
 
 	float fDist;
 	//int iWptFlags;
-
-	trace_t tr; //tr not used? [APG]RoboCop[CL]
+	
+	//trace_t tr; //tr not used? [APG]RoboCop[CL]
 
 	CBotMod *curmod = CBotGlobals::getCurrentMod();
 

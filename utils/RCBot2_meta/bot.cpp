@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
  *    part of https://rcbot2.svn.sourceforge.net/svnroot/rcbot2
  *
@@ -384,7 +386,7 @@ bool CBot :: createBotFromEdict(edict_t *pEdict, CBotProfile *pProfile)
 	engine->SetFakeClientConVarValue(pEdict,"cl_playermodel",szModel);
 	engine->SetFakeClientConVarValue(pEdict,"hud_fastswitch","1");
 
-	/*#if SOURCE_ENGINE == SE_TF2
+	#if SOURCE_ENGINE == SE_TF2
 	helpers->ClientCommand(pEdict, "jointeam auto");
 
 	//"heavy" should be "heavyweapons" in TF2?
@@ -396,21 +398,22 @@ bool CBot :: createBotFromEdict(edict_t *pEdict, CBotProfile *pProfile)
 	//"engineer", "sniper", "spy",
 	//};
 	
-	char cmd[32]; // conflicts with bot.h `CBotCmd cmd`? [APG]RoboCop[CL]
+	char command[32];
 
+	//TODO: To reduce any instability issues that could cause crashes [APG]RoboCop[CL]
 	if (m_iDesiredClass >= 0 && static_cast<unsigned>(m_iDesiredClass) < 10) {
 		char classNames[10][10] = {
 			"auto", "scout", "sniper", "soldier", "demoman", "medic", "heavy",
 			"pyro", "spy", "engineer"
 		};
-		snprintf(cmd, sizeof(cmd), "joinclass %s", classNames[m_iDesiredClass]);
+		snprintf(command, sizeof(command), "joinclass %s", classNames[m_iDesiredClass]);
 	}
 	else {
-		snprintf(cmd, sizeof(cmd), "joinclass auto");
+		snprintf(command, sizeof(command), "joinclass auto");
 	}
 	
-	helpers->ClientCommand(pEdict, cmd);
-	#endif*/
+	helpers->ClientCommand(pEdict, command);
+	#endif
 	/////////////////////////////
 
 	return true;
@@ -1291,29 +1294,26 @@ void CBot :: updateConditions ()
 }
 
 // Called when working out route
-bool CBot :: canGotoWaypoint (const Vector vPrevWaypoint, CWaypoint *pWaypoint, CWaypoint *pPrev)
+bool CBot::canGotoWaypoint(const Vector& vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev)
 {
-	if ( pWaypoint->hasFlag(CWaypointTypes::W_FL_UNREACHABLE) ) 
+	if (pWaypoint->hasFlag(CWaypointTypes::W_FL_UNREACHABLE))
 		return false;
-
-	if ( !pWaypoint->forTeam(getTeam()) )
+	if (!pWaypoint->forTeam(getTeam()))
 		return false;
-
-	if ( pWaypoint->hasFlag(CWaypointTypes::W_FL_OPENS_LATER) )
+	if (pWaypoint->hasFlag(CWaypointTypes::W_FL_OPENS_LATER))
 	{
-		if ( pPrev != nullptr)
+		if (pPrev != nullptr)
 		{
 			return pPrev->isPathOpened(pWaypoint->getOrigin());
 		}
-		if ( vPrevWaypoint != pWaypoint->getOrigin() && !CBotGlobals::checkOpensLater(vPrevWaypoint,pWaypoint->getOrigin()) )
+		if (vPrevWaypoint != pWaypoint->getOrigin() && !CBotGlobals::checkOpensLater(vPrevWaypoint, pWaypoint->getOrigin()))
 			return false;
 	}
-
-	if ( pWaypoint->hasFlag(CWaypointTypes::W_FL_FALL) )
+	if (pWaypoint->hasFlag(CWaypointTypes::W_FL_FALL))
 	{
-		if ( getHealthPercent() <= 0.1f )
+		if (getHealthPercent() <= 0.1f)
 		{
-			if ( vPrevWaypoint.z - pWaypoint->getOrigin().z > 200.0f )
+			if (vPrevWaypoint.z - pWaypoint->getOrigin().z > 200.0f)
 				return false;
 		}
 	}
@@ -2035,9 +2035,9 @@ void CBot :: listenForPlayers ()
 		
 		float fFactor = 0.0f;
 
-		const CBotCmd cmd = p->GetLastUserCommand(); //conflicts with bot.h `CBotCmd cmd`? [APG]RoboCop[CL]
+		const CBotCmd command = p->GetLastUserCommand();
 
-		if ( cmd.buttons & IN_ATTACK )
+		if ( command.buttons & IN_ATTACK )
 		{
 			if ( wantToListenToPlayerAttack(pPlayer) )
 				fFactor += 1000.0f;
@@ -2064,7 +2064,7 @@ void CBot :: listenForPlayers ()
 		{
 			fMaxFactor = fFactor;
 			pListenNearest = pPlayer;
-			bIsNearestAttacking = cmd.buttons & IN_ATTACK;
+			bIsNearestAttacking = command.buttons & IN_ATTACK;
 		}
 	}
 
@@ -2098,7 +2098,7 @@ void CBot :: listenToPlayer ( edict_t *pPlayer, bool bIsEnemy, const bool bIsAtt
 		}
 		else if ( bIsAttacking )
 		{
-			if ( !bIsEnemy && wantToInvestigateSound() )
+			if ( !bIsEnemy && wantToInvestigateSound() ) //TODO: !bIsEnemy always true? [APG]RoboCop[CL]
 			{
 				const QAngle angle = p->GetAbsAngles();
 				Vector forward;
@@ -2207,8 +2207,6 @@ void CBot :: doMove ()
 		{
 			if ( canAvoid(m_pAvoidEntity) )
 			{
-				const Vector m_vAvoidOrigin = CBotGlobals::entityOrigin(m_pAvoidEntity);
-
 				//m_vMoveTo = getOrigin() + ((m_vMoveTo-getOrigin())-((m_vAvoidOrigin-getOrigin())*bot_avoid_strength.GetFloat()));
 				//float fAvoidDist = distanceFrom(m_pAvoidEntity);
 
@@ -2227,6 +2225,8 @@ void CBot :: doMove ()
 #ifndef __linux__
 					if ( CClients::clientsDebugging(BOT_DEBUG_THINK) )
 					{
+						const Vector m_vAvoidOrigin = CBotGlobals::entityOrigin(m_pAvoidEntity);
+
 						debugoverlay->AddLineOverlay (getOrigin(), m_vAvoidOrigin, 0,0,255, false, 0.05f);
 						debugoverlay->AddLineOverlay (getOrigin(), m_bAvoidRight ? getOrigin()+vLeft*bot_avoid_strength.GetFloat():getOrigin()-vLeft*bot_avoid_strength.GetFloat(), 0,255,0, false, 0.05f);
 						debugoverlay->AddLineOverlay (getOrigin(), getOrigin() + vMove/vMove.Length()*bot_avoid_strength.GetFloat(), 255,0,0, false, 0.05f);
@@ -2234,7 +2234,6 @@ void CBot :: doMove ()
 					}
 #endif
 
-					//*/
 					//debugoverlay->AddLineOverlay (getOrigin(), m_vAvoidOrigin, 0,0,255, false, 0.05f);
 					//debugoverlay->AddLineOverlay (getOrigin(), m_bAvoidRight ? (getOrigin()+(vLeft*bot_avoid_strength.GetFloat())):(getOrigin()-(vLeft*bot_avoid_strength.GetFloat())), 0,255,0, false, 0.05f);
 					//debugoverlay->AddLineOverlay (getOrigin(), m_vMoveTo, 255,0,0, false, 0.05f);
@@ -2909,9 +2908,9 @@ void CBot :: doLook ()
 		if ( m_iLookTask == LOOK_GROUND )
 			requiredAngles.x = 89.0f;
 
-		const CBotCmd cmd = m_pPlayerInfo->GetLastUserCommand(); //conflicts with bot.h `CBotCmd cmd`? [APG]RoboCop[CL]
+		const CBotCmd command = m_pPlayerInfo->GetLastUserCommand();
 
-		m_vViewAngles = cmd.viewangles;
+		m_vViewAngles = command.viewangles;
 
 		if (m_vViewAngles.x == 0.0f && m_vViewAngles.y == 0.0f) {
 			CClients::clientDebugMsg(BOT_DEBUG_AIM, "view angle invalid", this);
@@ -3396,9 +3395,12 @@ void CBots :: botThink ()
 
 				#endif
 			}
-			if ( bot_command.GetString() && *bot_command.GetString() )
+
+			const char* command = bot_command.GetString();
+
+			if (command && *command)
 			{
-				helpers->ClientCommand(pBot->getEdict(),bot_command.GetString());
+				helpers->ClientCommand(pBot->getEdict(), command); // Use the cached value [APG]RoboCop[CL]
 
 				bot_command.SetValue("");
 			}
@@ -3586,7 +3588,8 @@ void CBots::kickRandomBotOnTeam(const int team)
 	const std::size_t botListSize = botList.size(); // Use std::size_t for size
 
 	if (botListSize > 0) {
-		snprintf(szCommand, sizeof(szCommand), "kickid %d\n", botList[static_cast<std::size_t>(randomInt(0, static_cast<int>(botListSize) - 1))]);
+		const int index = randomInt(0, static_cast<int>(botListSize) - 1);
+		snprintf(szCommand, sizeof(szCommand), "kickid %d\n", botList[static_cast<std::size_t>(index)]);
 	}
 
 	m_flAddKickBotTime = engine->Time() + 2.0f;

@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
  *    part of https://rcbot2.svn.sourceforge.net/svnroot/rcbot2
  *
@@ -53,6 +55,7 @@
 #include "bot_squads.h"
 #include "bot_waypoint_visibility.h"
 #include "bot_synergy.h"
+#include "rcbot/utils.h"
 
 //caxanga334: SDK 2013 contains macros for std::min and std::max which causes errors when compiling
 //#if SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
@@ -2089,12 +2092,12 @@ void CFindPathTask :: execute ( CBot *pBot, CBotSchedule *pSchedule )
 #endif
 
 		if ( pNav->workRoute( pBot->getOrigin(),
-							   m_vVector,
-							   &bFail,
-							   m_iInt==0,
-							   m_flags.bits.m_bNoInterruptions, 
-							   m_iWaypointId,
-							   pBot->getConditions(), m_iDangerPoint ) )
+		                      m_vVector,
+		                      &bFail,
+		                      m_iInt==0,
+		                      m_flags.bits.m_bNoInterruptions, 
+		                      m_iWaypointId,
+		                      pBot->getConditions(), m_iDangerPoint ) )
 		{
 			pBot->m_fWaypointStuckTime = engine->Time() + randomFloat(10.0f,15.0f);
 			pBot->moveFailed(); // reset
@@ -3262,9 +3265,9 @@ void CBotTF2Snipe :: execute (CBot *pBot, CBotSchedule *pSchedule)
 	if (pWeapon->getSlot() != 0)
 	{
 		CBotWeapons* pWeapons = pBot->getWeapons();
-		CBotWeapon* pWeapon = pWeapons->getCurrentWeaponInSlot(0); //TODO: `pWeapon` hides previous local declaration
+		const CBotWeapon* bot_weapon = pWeapons->getCurrentWeaponInSlot(0);
 
-		if (pWeapon && !pBot->select_CWeapon(pWeapon->getWeaponInfo()))
+		if (bot_weapon && !pBot->select_CWeapon(bot_weapon->getWeaponInfo()))
 		{
 			fail();
 			return;
@@ -4281,15 +4284,17 @@ void CDODDropAmmoTask :: debugString (char* string, unsigned bufferSize)
 
 void CDODDropAmmoTask :: execute (CBot *pBot, CBotSchedule *pSchedule)
 {
-	const Vector vOrigin = CBotGlobals::entityOrigin(m_pPlayer.get());
+	edict_t* pPlayer = m_pPlayer.get();
 
-	if ( m_pPlayer.get() == nullptr)
+	if (!pPlayer)
 	{
 		fail();
 		return;
 	}
 
-	if ( !CBotGlobals::entityIsAlive(m_pPlayer) )
+	const Vector vOrigin = CBotGlobals::entityOrigin(pPlayer);
+
+	if (!CBotGlobals::entityIsAlive(pPlayer))
 	{
 		fail();
 		return;
@@ -4301,14 +4306,14 @@ void CDODDropAmmoTask :: execute (CBot *pBot, CBotSchedule *pSchedule)
 
 	if ( pBot->isFacing(vOrigin) )
 	{
-		if ( !pBot->isVisible(m_pPlayer) )
+		if (!pBot->isVisible(m_pPlayer))
 		{
 			fail();
 			return;
 		}
 	}
 
-	if ( pBot->distanceFrom(m_pPlayer) < 200.0f && pBot->isFacing(vOrigin) )
+	if (pBot->distanceFrom(pPlayer) < 200.0f && pBot->isFacing(vOrigin))
 	{
 		CDODBot *pDODBot = static_cast<CDODBot*>(pBot);
 		pDODBot->dropAmmo();
@@ -4454,9 +4459,12 @@ void CBotTF2DemomanPipeJump :: execute (CBot *pBot, CBotSchedule *pSchedule)
 		return;
 	}
 
-	if ( m_pPipeBomb )
+	edict_t* pPipeBomb = m_pPipeBomb.get();
+
+	// pipe bomb entity is set on state 0
+	if (m_iState > 0)
 	{
-		if ( !CBotGlobals::entityIsValid(m_pPipeBomb) )
+		if (!rcbot2utils::IsValidEdict(pPipeBomb))
 		{
 			fail();
 			return;
@@ -4480,13 +4488,14 @@ void CBotTF2DemomanPipeJump :: execute (CBot *pBot, CBotSchedule *pSchedule)
 			else if ( m_bFired && m_iStartingAmmo > m_pWeapon->getClip1(pBot) )
 			{
 				// find pipe bomb
-				m_pPipeBomb = CClassInterface::FindEntityByClassnameNearest(pBot->getOrigin(),"tf_projectile_pipe_remote",150.0f, nullptr);
+				edict_t* pipe = CClassInterface::FindEntityByClassnameNearest(pBot->getOrigin(), "tf_projectile_pipe_remote", 150.0f, nullptr);
 
-				if ( m_pPipeBomb )
+				if (rcbot2utils::IsValidEdict(pipe))
 				{
 					// set this up incase of fail, the bot knows he has a sticky there
 					static_cast<CBotTF2*>(pBot)->setStickyTrapType(m_vStart,TF_TRAP_TYPE_ENEMY);
 					m_iState++;
+					m_pPipeBomb = pipe;
 				}
 				else
 					fail();
@@ -4518,7 +4527,7 @@ void CBotTF2DemomanPipeJump :: execute (CBot *pBot, CBotSchedule *pSchedule)
 		{
 			Vector vel;
 
-			if ( CClassInterface::getVelocity(m_pPipeBomb,&vel) )
+			if ( CClassInterface::getVelocity(pPipeBomb, &vel) )
 			{
 				if ( vel.Length() > 1.0f )
 					break; // wait until the pipe bomb has rested
@@ -4527,11 +4536,11 @@ void CBotTF2DemomanPipeJump :: execute (CBot *pBot, CBotSchedule *pSchedule)
 			Vector v_comp = m_vEnd - m_vStart;
 			v_comp = v_comp / v_comp.Length();
 
-			const Vector v_pipe = CBotGlobals::entityOrigin(m_pPipeBomb);
+			const Vector v_pipe = CBotGlobals::entityOrigin(pPipeBomb);
 			Vector v_startrunup = v_pipe - v_comp * rcbot_demo_runup_dist.GetFloat();
 			v_startrunup.z = v_pipe.z;
 
-			pBot->lookAtEdict(m_pPipeBomb);
+			pBot->lookAtEdict(pPipeBomb);
 			pBot->setLookAtTask(LOOK_EDICT);
 
 			// m_pPipeBomb != NULL
@@ -4548,7 +4557,7 @@ void CBotTF2DemomanPipeJump :: execute (CBot *pBot, CBotSchedule *pSchedule)
 		{
 			Vector v_comp = m_vEnd - m_vStart;
 			v_comp = v_comp / v_comp.Length();
-			const Vector v_pipe = CBotGlobals::entityOrigin(m_pPipeBomb);
+			const Vector v_pipe = CBotGlobals::entityOrigin(pPipeBomb);
 
 			Vector v_endrunup = v_pipe + v_comp * rcbot_demo_runup_dist.GetFloat();
 			v_endrunup.z = v_pipe.z;
@@ -5024,12 +5033,14 @@ void CBotTF2Spam :: execute (CBot *pBot, CBotSchedule *pSchedule)
 
 ///////////
 
-CBotTF2AttackSentryGunTask::CBotTF2AttackSentryGunTask (edict_t *pSentryGun, CBotWeapon *pWeapon) : m_pSentryGun(pSentryGun)
+CBotTF2AttackSentryGunTask::CBotTF2AttackSentryGunTask(edict_t* pSentryGun, CBotWeapon* pWeapon)
+	: m_pSentryGun(pSentryGun), m_vStart(0, 0, 0), m_vHide(0, 0, 0) // Required for SGs to face the direction correctly? [APG]RoboCop[CL]
 {
 	m_iStartingWaypoint = 0;
 	m_iSentryWaypoint = 0;
 	m_fDist = 0.0f;
 	m_fTime = 0.0f;
+	m_pSentryGun = pSentryGun;
 	m_pWeapon = pWeapon;
 }
 

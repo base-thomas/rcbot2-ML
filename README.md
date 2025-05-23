@@ -102,8 +102,6 @@ Additionally, `rcbot/logging.{h,cpp}` is released separately under the
 - Bots need to understand how to play Kart games from sd_doomsday_event as they only wonder around those minigames
 - CBotTF2::changeClass needs to be implemented to avoid bots punting when using ClassRestrictionsForBots.smx and `rcbot_change_classes 1`
 - To add TF2C support along with Black Mesa Source, Counter-Strike: Source, Synergy and Dystopia
-- And to add proper AMD64/x64 support for RCBot2 TF2, DoDS and HL2DM
-- Edit the Mathfix definitions for Linux
 
 ## Credits:-
 
@@ -112,8 +110,9 @@ Additionally, `rcbot/logging.{h,cpp}` is released separately under the
 - Linux Conversion and Waypointing - [APG]RoboCop[CL]
 - TF2 support and enhancements - Ducky1231/Pongo
 - SourceMod and AMBuild support - nosoop
-- Synergy, MvM, CSS and AMBuild support - Anonymous Player/caxanga334
+- Synergy, TF2, MvM, CSS and AMBuild support - Anonymous Player/caxanga334
 - TF2 Classic support - Technochips
+- TF2 additional gamemodes support - RussiaTails
 - Linux Black Mesa and SDK2013 mathlib fix - Sappho
 - Dystopia support - Soft As Hell
 - Major waypointer for TF2 - LK777, RussiaTails, Witch, Francis, RevilleAJ, Waffle033

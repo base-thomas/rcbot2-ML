@@ -178,13 +178,13 @@ public:
 	Vector getVectorData() { return m_vVector; }
 
 private:
-	int m_iData;
-	float m_fUtility;
-	bool m_bCanDo;
-	eBotAction m_id;
-	CBot* m_pBot;
-	CBotWeapon* m_pWeapon;
-	Vector m_vVector;
+    CBot* m_pBot; // Bot pointer
+    CBotWeapon* m_pWeapon; // Weapon choice
+    Vector m_vVector; // Vector data
+    float m_fUtility; // Utility value
+    int m_iData; // Integer data
+    eBotAction m_id; // Bot action ID
+    bool m_bCanDo; // Can perform action
 };
 
 typedef struct util_node_s

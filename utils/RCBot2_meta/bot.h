@@ -661,7 +661,7 @@ public:
 
     CBotProfile *getProfile () const { return m_pProfile; }
 
-	virtual bool canGotoWaypoint (Vector vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev = nullptr);
+	virtual bool canGotoWaypoint (const Vector& vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev = nullptr);
 	
 	void updatePosition() const;
 

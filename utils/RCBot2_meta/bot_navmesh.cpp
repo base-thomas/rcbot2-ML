@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
  *    This file is part of RCBot.
  *
@@ -60,7 +62,8 @@ void CNavMeshNavigator::CalculateRoute(Vector startNodeID, Vector goalNodeID)
 	//m_theNavMesh->CalculateRoute(startNodeID, goalNodeID);
 }
 
-bool CNavMeshNavigator::workRoute(Vector vFrom, Vector vTo, bool* bFail, bool bRestart, bool bNoInterruptions, int iGoalId, int iConditions, int iDangerId)
+bool CNavMeshNavigator::workRoute(const Vector& vFrom, const Vector& vTo, bool* bFail, const bool bRestart, const bool bNoInterruptions, const int
+                                  iGoalId, const int iConditions, const int iDangerId)
 {
     // Try to find a route using the primary waypoint system
 	/*bool routeFound = false; // logic to find a route using the primary waypoint system

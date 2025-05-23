@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
  *    This file is part of RCBot.
  *
@@ -94,29 +96,32 @@ CBotCommandInline TeleportUtilCommand("teleport", CMD_ACCESS_UTIL, [](CClient* p
 
 CBotCommandInline NoClipCommand("noclip", CMD_ACCESS_UTIL, [](const CClient* pClient, const BotCommandArgs& args)
 {
-	if (edict_t* pEntity = pClient ? pClient->getPlayer() : nullptr)
+	if (pClient)
 	{
-		constexpr unsigned bufferSize = 256; // Adjust the buffer size as needed - [APG]RoboCop[CL]
-		std::string msg(bufferSize, '\0');
-
-		byte* movetype = CClassInterface::getMoveTypePointer(pEntity);
-
-		if ((*movetype & 15) != MOVETYPE_NOCLIP)
+		if (edict_t* pEntity = pClient->getPlayer())
 		{
-			*movetype &= ~15;
-			*movetype |= MOVETYPE_NOCLIP;
-		}
-		else
-		{
-			*movetype &= ~15;
-			*movetype |= MOVETYPE_WALK;
-		}
-		snprintf(msg.data(), bufferSize, "%s used no_clip %d on self\n", pClient->getName(), ((*movetype & 15) == MOVETYPE_NOCLIP));
+			constexpr unsigned bufferSize = 256; // Adjust the buffer size as needed - [APG]RoboCop[CL]
+			std::string msg(bufferSize, '\0');
 
-		CBotGlobals::botMessage(pEntity, 0, msg.c_str());
-		return COMMAND_ACCESSED;
+			byte* movetype = CClassInterface::getMoveTypePointer(pEntity);
+
+			if (constexpr byte MOVETYPE_MASK = 15; (*movetype & MOVETYPE_MASK) != MOVETYPE_NOCLIP)
+			{
+				*movetype &= ~MOVETYPE_MASK;
+				*movetype |= MOVETYPE_NOCLIP;
+			}
+			else
+			{
+				*movetype &= ~15;
+				*movetype |= MOVETYPE_WALK;
+			}
+			// Ensure pClient is valid before accessing its methods
+			snprintf(msg.data(), bufferSize, "%s used no_clip %d on self\n", pClient->getName(), ((*movetype & 15) == MOVETYPE_NOCLIP));
+
+			CBotGlobals::botMessage(pEntity, 0, msg.c_str());
+			return COMMAND_ACCESSED;
+		}
 	}
-
 	return COMMAND_ERROR;
 }, "fly through walls , yeah!");
 

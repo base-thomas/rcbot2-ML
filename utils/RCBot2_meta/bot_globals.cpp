@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
  *    This file is part of RCBot.
  *
@@ -791,8 +793,9 @@ bool CBotGlobals :: walkableFromTo (edict_t *pPlayer, const Vector& v_src, const
 					Vector v_norm = v_dest-v_src;
 					v_norm = v_norm/std::sqrt(v_norm.LengthSqr());
 
-					for ( float fDistCheck = 45.0f; fDistCheck < fDistance; fDistCheck += 45 ) //Floating-point not recommended [APG]RoboCop[CL]
-					{
+					for (int iDistCheck = 0; static_cast<float>(iDistCheck) * 45 < fDistance; ++iDistCheck) {
+						float fDistCheck = static_cast<float>(iDistCheck) * 45.0f;
+					
 						Vector v_checkpoint = v_src + v_norm * fDistCheck;
 
 						// check jump height again

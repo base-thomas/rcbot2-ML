@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
  *    This file is part of RCBot.
  *
@@ -944,24 +946,20 @@ void CClient::giveMessage(const char *msg, const float fTime)
 
 void CClients::giveMessage(const char* msg, const float fTime, const edict_t* pPlayer)
 {
-	CClient *pClient;
-
-	if ( pPlayer != nullptr)
+	if (pPlayer != nullptr)
 	{
-		pClient = get(pPlayer);
-		
-		if ( pClient )
-			pClient->giveMessage(msg,fTime);
+		if (CClient* pClient = get(pPlayer))
+		{
+			pClient->giveMessage(msg, fTime);
+		}
 	}
 	else
 	{
-		for ( int i = 0; i < 32; i ++ )
+		for (int i = 0; i < 32; i++)
 		{
-			pClient = get(i);
-
-			if ( pClient )
+			if (CClient* pClient = get(i))
 			{
-				pClient->giveMessage(msg,fTime);
+				pClient->giveMessage(msg, fTime);
 			}
 		}
 	}
@@ -1023,9 +1021,7 @@ void CClient :: clientDisconnected ()
 			// Prevents crashes since RCBot2 tries to read the squad leader in some places without NULL checks.
 			if (pBot->inSquad() && pBot->isSquadLeader())
 			{
-				CBotSquad* squad = CBotSquads::FindSquadByLeader(m_pPlayer);
-
-				if (squad)
+				if (CBotSquad* squad = CBotSquads::FindSquadByLeader(m_pPlayer))
 				{
 					CBotSquads::RemoveSquad(squad);
 				}

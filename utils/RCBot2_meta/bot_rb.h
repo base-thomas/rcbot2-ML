@@ -1,8 +1,20 @@
 #ifndef __RCBOT_RB_H__
 #define __RCBOT_RB_H__
 #include <vector>
+#include <cstdint> // Include for std::uint8_t
 
 class CBotOperator;
+
+typedef enum : std::uint8_t
+{
+	OP_NONE = 0,
+	OP_PRE_NORM,
+	OP_PRE_NOT,
+	OP_AND,
+	OP_OR,
+	OP_AND_NOT,
+	OP_OR_NOT
+} CBotFactOperator; // Corrected the typo in the typedef name
 
 class CBotRule
 {
@@ -18,9 +30,11 @@ class CBotOperator
 public:
 	virtual ~CBotOperator() = default;
 
-	CBotOperator ( const CBotFactOpertor& op ) : m_op(op)
-	{		
+	CBotOperator(const CBotFactOperator& op) : m_op(op) // Corrected the typo in the parameter type
+	{
 	}
+
+	CBotOperator();
 
 	virtual bool operate(const bool bVal, CBotOperator* pNext)
 	{
@@ -47,17 +61,18 @@ public:
 		return true;
 	}
 private:
-	CBotFactOperator m_op;
+	CBotFactOperator m_op; // Corrected the typo in the member variable type
 };
+
 // for use with rule list
 class CBotFact : public CBotOperator
 {
 public:
-	CBotFact (const unsigned iFactId) : m_fid(iFactId)
+	CBotFact(const unsigned iFactId) : m_fid(iFactId)
 	{
 	}
 
-	bool operate ( bVal, CBotOperator *pNext ) override
+	bool operate(const bool bVal, CBotOperator* pNext) override // Added missing parameter type
 	{
 		return m_bVal;
 	}
@@ -70,16 +85,5 @@ private:
 	unsigned m_fid;
 	bool m_bVal;
 };
-
-typedef enum : std::uint8_t
-{
-	OP_NONE = 0,
-	OP_PRE_NORM,
-	OP_PRE_NOT,
-	OP_AND,
-	OP_OR,
-	OP_AND_NOT,
-	OP_OR_NOT
-}CBotFactOperator;
 
 #endif

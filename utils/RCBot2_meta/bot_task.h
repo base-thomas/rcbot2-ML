@@ -320,7 +320,7 @@ private:
 	Vector m_vStart;
 	Vector m_vPipe;
 	Vector m_vEnd;
-	edict_t* m_pPipeBomb;
+	MyEHandle m_pPipeBomb;
 	bool m_bFired;
 	float m_fTime;
 	//int m_iState;

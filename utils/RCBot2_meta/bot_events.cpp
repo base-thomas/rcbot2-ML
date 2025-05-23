@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
  *    This file is part of RCBot.
  *
@@ -1280,9 +1282,8 @@ void CBotEvents::executeEvent(void* pEvent, const eBotEventType iType)
 		//if ( ( iType != TYPE_IGAMEEVENT ) && pFound->hasEventId() )
 		//	bFound = pFound->isEventId(iEventId);
 		//else
-		const bool bFound = pFound->forCurrentMod() && pFound->isType(pInterface->getName());
 
-		if ( bFound )	
+		if ( const bool bFound = pFound->forCurrentMod() && pFound->isType(pInterface->getName()) )	
 		{
 			const int userid = pInterface->getInt("userid",-1);
 			// set pEvent id for quick checking

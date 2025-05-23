@@ -191,7 +191,7 @@ public:
 
 	bool selectBotWeapon ( CBotWeapon *pBotWeapon ) override;
 
-	bool canGotoWaypoint (Vector vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev = nullptr) override;
+	bool canGotoWaypoint (const Vector& vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev = nullptr) override;
 
 	void defending () override;
 

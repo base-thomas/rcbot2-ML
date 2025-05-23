@@ -582,7 +582,7 @@ public:
 	void flagReset () { m_fLastKnownFlagTime = 0.0f; }
 	void teamFlagReset () { m_fLastKnownTeamFlagTime = 0.0f; }
 
-	bool canGotoWaypoint (const Vector vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev = nullptr) override
+	bool canGotoWaypoint (const Vector& vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev = nullptr) override
 	{
 		return CBot::canGotoWaypoint(vPrevWaypoint,pWaypoint,pPrev);
 	}
@@ -921,7 +921,7 @@ public:
 
 	void sapperDestroyed ( edict_t *pSapper ) const;
 	
-	bool canGotoWaypoint (Vector vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev = nullptr) override;
+	bool canGotoWaypoint (const Vector& vPrevWaypoint, CWaypoint* pWaypoint, CWaypoint* pPrev = nullptr) override;
 
 	bool deployStickies ( eDemoTrapType type, const Vector& vStand, const Vector& vLocation, const Vector& vSpread, Vector *vPoint, int *iState, int *iStickyNum, bool *bFail, float *fTime, int wptindex );
 

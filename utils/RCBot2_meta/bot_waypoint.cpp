@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /*
  *    This file is part of RCBot.
  *
@@ -56,6 +58,7 @@
 #include "bot_wpt_dist.h"
 
 #include "rcbot/logging.h"
+#include "rcbot/utils.h"
 
 #include <algorithm>
 #include <cmath>
@@ -585,15 +588,15 @@ CWaypoint *CWaypointNavigator :: chooseBestFromBelief ( const std::vector<CWaypo
 }
 
 // get the covering waypoint vector vCover
-bool CWaypointNavigator :: getCoverPosition (const Vector vCoverOrigin, Vector *vCover)
+bool CWaypointNavigator::getCoverPosition(const Vector& vCoverOrigin, Vector* vCover)
 {
 	const int iWpt = CWaypointLocations::GetCoverWaypoint(m_pBot->getOrigin(), vCoverOrigin, nullptr);
 
-	CWaypoint *pWaypoint = CWaypoints::getWaypoint(iWpt);
-	
-	if ( pWaypoint == nullptr)
+	CWaypoint* pWaypoint = CWaypoints::getWaypoint(iWpt);
+
+	if (pWaypoint == nullptr)
 		return false;
-	
+
 	*vCover = pWaypoint->getOrigin();
 
 	return true;
@@ -618,7 +621,7 @@ void CWaypointNavigator :: beliefOne (const int iWptIndex, const BotBelief iBeli
 }
 
 // get belief nearest to current origin using waypoints to store belief
-void CWaypointNavigator :: belief (const Vector vOrigin, const Vector vOther, const float fBelief,
+void CWaypointNavigator :: belief (const Vector& vOrigin, const Vector& vOther, const float fBelief,
 								   const float fStrength, const BotBelief iType)
 {
 	static float factor; //Unused? [APG]RoboCop[CL]
@@ -755,7 +758,7 @@ bool CWaypointNavigator :: getCrouchHideSpot ( Vector vCoverOrigin, Vector *vCov
 }
 */
 // get the hide spot position (vCover) from origin vCoverOrigin
-bool CWaypointNavigator :: getHideSpotPosition (const Vector vCoverOrigin, Vector *vCover)
+bool CWaypointNavigator :: getHideSpotPosition (const Vector& vCoverOrigin, Vector *vCover)
 {
 	int iWpt;
 
@@ -819,7 +822,7 @@ void CWaypointNavigator :: failMove ()
 	}
 }
 
-float CWaypointNavigator :: distanceTo (const Vector vOrigin)
+float CWaypointNavigator :: distanceTo (const Vector& vOrigin)
 {
 	if ( m_iCurrentWaypoint == -1 )
 		m_iCurrentWaypoint = CWaypointLocations::NearestWaypoint(m_pBot->getOrigin(),CWaypointLocations::REACHABLE_RANGE,-1,true,false,true, nullptr,false,m_pBot->getTeam());
@@ -842,8 +845,8 @@ float CWaypointNavigator :: distanceTo ( CWaypoint *pWaypoint )
 }
 
 // find route using A* algorithm
-bool CWaypointNavigator :: workRoute (const Vector vFrom,
-									  const Vector vTo, 
+bool CWaypointNavigator :: workRoute (const Vector& vFrom,
+									  const Vector& vTo, 
 									  bool *bFail,
 									  const bool bRestart,
 									  const bool bNoInterruptions,
@@ -1221,7 +1224,7 @@ bool CWaypointNavigator :: getNextRoutePoint ( Vector *vPoint )
 	return false;
 }
 
-bool CWaypointNavigator :: canGetTo (const Vector vOrigin)
+bool CWaypointNavigator :: canGetTo (const Vector& vOrigin)
 {
 	const int iwpt = CWaypointLocations::NearestWaypoint(vOrigin,100,-1,true,false,true, nullptr,false,m_pBot->getTeam());
 
@@ -1584,8 +1587,10 @@ void CWaypoint :: draw ( edict_t *pEdict, const bool bDrawPaths, const unsigned 
 				}
 			}
 		}
+		[[fallthrough]];
 	case DRAWTYPE_DEBUGENGINE3:
 		fDistance = 72.0f;
+		[[fallthrough]];
 	case DRAWTYPE_DEBUGENGINE2:
 		// draw area
 		if ( pEdict )
@@ -1624,6 +1629,7 @@ void CWaypoint :: draw ( edict_t *pEdict, const bool bDrawPaths, const unsigned 
 			}
 		}
 		// this will drop down -- don't break
+		[[fallthrough]];
 	case DRAWTYPE_DEBUGENGINE:
 
 #ifndef __linux__
@@ -2305,6 +2311,8 @@ int CWaypoints :: addWaypoint ( CClient *pClient, const char *type1, const char 
 	if ( pPlayer->GetFlags() & FL_DUCKING )
 		iFlags |= CWaypoint::W_FL_CROUCH;		*/
 
+	float maxRange = rcbot_wpt_autotype_detection_range.GetFloat();
+	maxRange = std::clamp(maxRange, 80.0f, 512.0f); // clamp the variable to sane values
 
 	if ( rcbot_wpt_autotype.GetInt() && (!bUseTemplate || rcbot_wpt_autotype.GetInt()==2) )
 	{
@@ -2314,22 +2322,34 @@ int CWaypoints :: addWaypoint ( CClient *pClient, const char *type1, const char 
 				iFlags |= CWaypointTypes::W_FL_CROUCH;
 		}
 
-		for ( int i = 0; i < gpGlobals->maxEntities; i ++ )
+		for (int i = 0; i < gpGlobals->maxEntities; i++)
 		{
-			if ( edict_t* pEdict = INDEXENT(i) )
+			edict_t* pEdict = rcbot2utils::EdictOfIndex(i);
+
+			if (rcbot2utils::IsValidEdict(pEdict))
 			{
-				if ( !pEdict->IsFree() )
+				const float rangeToOrigin = (rcbot2utils::GetEntityOrigin(pEdict) - vWptOrigin).Length();
+				const float rangeToCenter = (rcbot2utils::GetWorldSpaceCenter(pEdict) - vWptOrigin).Length(); // for brush entities
+				const float fDistance = std::min(rangeToOrigin, rangeToCenter); // select the smallest between the two distances
+
+				if (fDistance <= maxRange)
 				{
-					if ( pEdict->m_pNetworkable && pEdict->GetIServerEntity() )
+					fMaxDistance = std::max(fDistance, fMaxDistance);
+
+					pCurrentMod->addWaypointFlags(pClient->getPlayer(), pEdict, &iFlags, &iArea, &fMaxDistance);
+				}
+				else
+				{
+					// distances are unreliable for brush entities, also do a bounds check if the distance above failed
+					Vector vWptTop = vWptOrigin;
+					vWptTop.z += CWaypoint::WAYPOINT_HEIGHT;
+
+					if (rcbot2utils::PointIsWithinTrigger(pEdict, vWptOrigin) || rcbot2utils::PointIsWithinTrigger(pEdict, vWptTop))
 					{
-						const float fDistance = (CBotGlobals::entityOrigin(pEdict) - vWptOrigin).Length();
+						// Waypoint origin collides with a entity bound
+						fMaxDistance = std::max(fDistance, fMaxDistance);
 
-						if ( fDistance <= 80.0f )
-						{
-							fMaxDistance = std::max(fDistance, fMaxDistance);
-
-							pCurrentMod->addWaypointFlags(pClient->getPlayer(),pEdict,&iFlags,&iArea,&fMaxDistance);
-						}
+						pCurrentMod->addWaypointFlags(pClient->getPlayer(), pEdict, &iFlags, &iArea, &fMaxDistance);
 					}
 				}
 			}
@@ -3350,11 +3370,11 @@ void CWaypointTest :: go ( edict_t *pPlayer )
 						constexpr bool bnointerruptions = true;
 
 						while ( pNav->workRoute(
-							pWpt1->getOrigin(),
-							pWpt2->getOrigin(),
-							&bfail,
-							brestart,
-							bnointerruptions,j) 
+								pWpt1->getOrigin(),
+								pWpt2->getOrigin(),
+								&bfail,
+								brestart,
+								bnointerruptions,j) 
 							== 
 							false 
 							) {}

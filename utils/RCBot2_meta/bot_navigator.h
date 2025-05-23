@@ -67,7 +67,8 @@ public:
 	virtual void init () = 0;
 
 	// returns true when working out route finishes, not if successful
-	virtual bool workRoute ( Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId = -1, int iConditions = 0, int iDangerId = -1 ) = 0;
+	virtual bool workRoute (const Vector& vFrom, const Vector& vTo, bool* bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId =
+		                        -1, int iConditions = 0, int iDangerId = -1) = 0;
 
 	virtual void rollBackPosition () = 0;
 
@@ -89,12 +90,12 @@ public:
 
 	virtual void updatePosition () = 0;
 
-	virtual bool canGetTo ( Vector vOrigin ) = 0;
+	virtual bool canGetTo (const Vector& vOrigin) = 0;
 
 	virtual int getCurrentFlags () { return 0; }
 	virtual int getPathFlags ( int iPath ) { return 0; }
 
-	virtual float distanceTo ( Vector vOrigin ) = 0;
+	virtual float distanceTo (const Vector& vOrigin) = 0;
 
 	virtual float distanceTo ( CWaypoint *pWaypoint ) = 0;
 
@@ -118,12 +119,12 @@ public:
 
 	virtual bool beliefSave ( bool bOverride = false ) { return false; }
 
-	virtual void belief ( Vector origin, Vector vOther, float fBelief, float fStrength, BotBelief iType ) = 0;
+	virtual void belief (const Vector& origin, const Vector& vOther, float fBelief, float fStrength, BotBelief iType) = 0;
 
 	// nearest cover position to vOrigin only
-	virtual bool getCoverPosition ( Vector vCoverOrigin, Vector *vCover ) = 0;
+	virtual bool getCoverPosition (const Vector& vCoverOrigin, Vector* vCover) = 0;
 	// nearest cover postion to both vectors
-	virtual bool getHideSpotPosition ( Vector vCoverOrigin, Vector *vCover ) = 0;
+	virtual bool getHideSpotPosition (const Vector& vCoverOrigin, Vector* vCover) = 0;
 
 	virtual float getCurrentBelief ( ) { return 0; }
 
@@ -399,7 +400,8 @@ public:
 
 	float getNextYaw () override;
 
-	bool workRoute ( Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId = -1, int iConditions = 0, int iDangerId = -1 ) override;
+	bool workRoute (const Vector& vFrom, const Vector& vTo, bool* bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId =
+		                -1, int iConditions = 0, int iDangerId = -1) override;
 
 	bool getNextRoutePoint ( Vector *vPoint ) override;
 
@@ -420,7 +422,7 @@ public:
 
 	void freeAllMemory () override;
 
-	bool canGetTo ( Vector vOrigin ) override;
+	bool canGetTo (const Vector& vOrigin) override;
 
 	bool routeFound () override;
 
@@ -432,7 +434,7 @@ public:
 
 	AStarNode *nextNode ();
 
-	float distanceTo ( Vector vOrigin ) override;
+	float distanceTo (const Vector& vOrigin) override;
 
 	float distanceTo ( CWaypoint *pWaypoint ) override;
 
@@ -444,14 +446,14 @@ public:
 
 	//virtual void goBack();
 	
-	void belief ( Vector origin, Vector vOther, float fBelief, float fStrength, BotBelief iType ) override; //TODO: not implemented? [APG]RoboCop[CL]
+	void belief (const Vector& vOrigin, const Vector& vOther, float fBelief, float fStrength, BotBelief iType) override; //TODO: not implemented? [APG]RoboCop[CL]
 
 	void beliefOne ( int iWptIndex, BotBelief iBeliefType, float fDist ) override; //TODO: not implemented? [APG]RoboCop[CL]
 
 	// nearest cover position to vOrigin only
-	bool getCoverPosition ( Vector vCoverOrigin, Vector *vCover ) override;
+	bool getCoverPosition (const Vector& vCoverOrigin, Vector* vCover) override;
 	// nearest cover postion to both vectors
-	bool getHideSpotPosition ( Vector vCoverOrigin, Vector *vCover ) override;
+	bool getHideSpotPosition (const Vector& vCoverOrigin, Vector* vCover) override;
 
 	void getFailedGoals (WaypointList **goals) override { *goals = &m_iFailedGoals; }
 
@@ -525,7 +527,8 @@ public:
 
 	void CalculateRoute(Vector startNodeID, Vector goalNodeID);
 
-	bool workRoute ( Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId = -1, int iConditions = 0, int iDangerId = -1  ) override;
+	bool workRoute (const Vector& vFrom, const Vector& vTo, bool* bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId =
+		                -1, int iConditions = 0, int iDangerId = -1) override;
 
 	Vector getNextPoint () override;
 
@@ -543,7 +546,7 @@ public:
 
 	void init () override;
 
-	void belief ( Vector origin, Vector facing, float fBelief, float fStrength, BotBelief iType ) override {} //bir3yk
+	void belief (const Vector& origin, const Vector& facing, const float fBelief, const float fStrength, const BotBelief iType) override {} //bir3yk
 
 	//void rememberEnemyPosition ( Vector vOrigin );
 

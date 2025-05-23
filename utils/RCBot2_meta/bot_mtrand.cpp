@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 // mtrand.h
 // C++ include file for MT19937, with initialization improved 2002/1/26.
 // Coded by Takuji Nishimura and Makoto Matsumoto.
@@ -73,7 +75,10 @@
  *    version.
  *
  */
+
 #include "bot_mtrand.h"
+#include <cstddef>
+
 // non-inline function definitions and static member definitions cannot
 // reside in header file because of the risk of multiple declarations
 
@@ -82,7 +87,9 @@ unsigned long MTRand_int32::state[n] = {0x0UL};
 int MTRand_int32::p = 0;
 bool MTRand_int32::init = false;
 
-static unsigned long init[4] = {0x123, 0x234, 0x345, 0x456}, length = 4;
+static unsigned long init[] = { 0x123, 0x234, 0x345, 0x456 };
+static constexpr std::size_t length = sizeof(init) / sizeof(init[0]); // Manual array size calculation
+
 MTRand_int32 irand(init, length);
 static MTRand drand;
 
@@ -117,34 +124,56 @@ void MTRand_int32::gen_state() { // generate new state vector
 
 void MTRand_int32::seed(const unsigned long s) 
 {  // init by 32 bit seed
-  state[0] = s & 0xFFFFFFFFUL; // for > 32 bit machines
+  state[0] = s & BIT_MASK_32; // for > 32 bit machines
   for (int i = 1; i < n; ++i) 
   {
 	state[i] = 1812433253UL * (state[i - 1] ^ state[i - 1] >> 30) + i;
 // see Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier
 // in the previous versions, MSBs of the seed affect only MSBs of the array state
 // 2002/01/09 modified by Makoto Matsumoto
-	state[i] &= 0xFFFFFFFFUL; // for > 32 bit machines
+	state[i] &= BIT_MASK_32; // for > 32 bit machines
   }
   p = n; // force gen_state() to be called for next random number
 }
 
 void MTRand_int32::seed(const unsigned long* array, const int size) const
 { // init by array
-  seed(19650218UL);
-  int i = 1, j = 0;
-  for (int k = n > size ? n : size; k; --k) {
-	state[i] = (state[i] ^ (state[i - 1] ^ state[i - 1] >> 30) * 1664525UL)
-	  + array[j] + j; // non linear
-	state[i] &= 0xFFFFFFFFUL; // for > 32 bit machines
-	++j; j %= size;
-	if (++i == n) { state[0] = state[n - 1]; i = 1; }
-  }
-  for (int k = n - 1; k; --k) {
-	state[i] = (state[i] ^ (state[i - 1] ^ state[i - 1] >> 30) * 1566083941UL) - i;
-	state[i] &= 0xFFFFFFFFUL; // for > 32 bit machines
-	if (++i == n) { state[0] = state[n - 1]; i = 1; }
-  }
-  state[0] = 0x80000000UL; // MSB is 1; assuring non-zero initial array
-  p = n; // force gen_state() to be called for next random number
+    seed(19650218UL);
+    int i = 1, j = 0;
+    for (int k = n > size ? n : size; k; --k) {
+        state[i] = (state[i] ^ (state[i - 1] ^ (state[i - 1] >> 30)) * 1664525UL)
+            + array[j] + j; // non linear
+        state[i] &= BIT_MASK_32; // for > 32 bit machines
+        ++j; j %= size;
+        if (++i == n) { state[0] = state[n - 1]; i = 1; }
+    }
+    for (int k = n - 1; k; --k) {
+        state[i] = (state[i] ^ (state[i - 1] ^ (state[i - 1] >> 30)) * 1566083941UL) - i;
+        state[i] &= BIT_MASK_32; // for > 32 bit machines
+        if (++i == n) { state[0] = state[n - 1]; i = 1; }
+    }
+    state[0] = MSB_MASK; // MSB is 1; assuring non-zero initial array
+    p = n; // force gen_state() to be called for next random number
 }
+
+//TODO: 64-bit generator? [APG]RoboCop[CL]
+/*void MTRand_int64::seed(const unsigned long long* array, const int size) const
+{ // init by array for 64-bit generator
+    seed(19650218ULL);
+    size_t i = 1, j = 0;
+    for (size_t k = n > size ? n : size; k; --k) {
+        state[i] = (state[i] ^ (state[i - 1] ^ (state[i - 1] >> 30)) * 6364136223846793005ULL)
+            + array[j] + j; // non linear
+        state[i] &= BIT_MASK_64; // for > 64 bit machines
+        ++j; j %= size;
+        if (++i == n) { state[0] = state[n - 1]; i = 1; }
+    }
+    for (size_t k = n - 1; k; --k) {
+        state[i] = (state[i] ^ (state[i - 1] ^ (state[i - 1] >> 30)) * 3935559000370003845ULL) - i;
+        state[i] &= BIT_MASK_64; // for > 64 bit machines
+        if (++i == n) { state[0] = state[n - 1]; i = 1; }
+    }
+    state[0] = MSB_MASK_64; // MSB is 1; assuring non-zero initial array
+    p = n; // force gen_state() to be called for next random number
+}
+*/

@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 /**
  * vim: set ts=4 sw=4 tw=99 noet :
  * ======================================================
@@ -23,6 +25,7 @@
 
 #include "filesystem.h"
 #include "interface.h"
+#include "IStaticPropMgr.h"
 
 #ifdef __linux__
 #include "shake.h"    //bir3yk
@@ -106,6 +109,7 @@ IVDebugOverlay *debugoverlay = nullptr;
 IServerGameEnts *servergameents = nullptr; // for accessing the server game entities
 IServerGameDLL *servergamedll = nullptr;
 IServerTools *servertools = nullptr;
+IStaticPropMgrServer* staticpropmgr = nullptr;
 
 RCBotPluginMeta g_RCBotPluginMeta;
 
@@ -342,6 +346,7 @@ bool RCBotPluginMeta::Load(PluginId id, ISmmAPI *ismm, char *error, std::size_t 
 	GET_V_IFACE_CURRENT(GetEngineFactory, gameevents, IGameEventManager2, INTERFACEVERSION_GAMEEVENTSMANAGER2)
 	GET_V_IFACE_CURRENT(GetEngineFactory, helpers, IServerPluginHelpers, INTERFACEVERSION_ISERVERPLUGINHELPERS)
 	GET_V_IFACE_CURRENT(GetEngineFactory, icvar, ICvar, CVAR_INTERFACE_VERSION)
+	GET_V_IFACE_CURRENT(GetEngineFactory, staticpropmgr, IStaticPropMgrServer, INTERFACEVERSION_STATICPROPMGR_SERVER)
 
 	GET_V_IFACE_ANY(GetEngineFactory, filesystem, IFileSystem, FILESYSTEM_INTERFACE_VERSION)
 
@@ -751,9 +756,7 @@ void RCBotPluginMeta::Hook_ClientPutInServer(edict_t *pEntity, char const* playe
 	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pEntity); //`*pEnt` Unused? [APG]RoboCop[CL]
 	constexpr bool is_Rcbot = false;
 
-	CClient *pClient = CClients::clientConnected(pEntity);
-
-	if ( !is_Rcbot && pClient ) //`!is_Rcbot` Unused? [APG]RoboCop[CL]
+	if ( CClient *pClient = CClients::clientConnected(pEntity) )
 	{
 		if ( !engine->IsDedicatedServer() )
 		{

@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 #include "bot.h"
 #include "bot_coop.h"
 #include "bot_buttons.h"
@@ -25,20 +27,19 @@ bool CBotCoop::isEnemy(edict_t* pEdict, bool bCheckWeapons)
 		return false;
 	}
 
-	const char* classname = pEdict->GetClassName();
-
 	// List of friendly NPCs
-	constexpr std::array<const char*, 5> friendlyNPCs = {
-		"npc_antlionguard",
-		"npc_citizen",
-		"npc_barney",
-		"npc_kliener",
-		"npc_alyx"
-	};
 
-	if (std::strncmp(classname, "npc_", 4) == 0)
+	if (const char* classname = pEdict->GetClassName(); std::strncmp(classname, "npc_", 4) == 0)
 	{
-		for (const auto& friendly : friendlyNPCs)
+		constexpr std::array<const char*, 5> friendlyNPCs = {
+			"npc_antlionguard",
+			"npc_citizen",
+			"npc_barney",
+			"npc_kliener",
+			"npc_alyx"
+		};
+
+		for (const char* const& friendly : friendlyNPCs)
 		{
 			if (std::strcmp(classname, friendly) == 0)
 			{
