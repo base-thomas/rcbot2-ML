@@ -1634,7 +1634,7 @@ bool CBot :: hurt ( edict_t *pAttacker, const int iHealthNow, const bool bDontHi
 
 	m_vHurtOrigin = CBotGlobals::entityOrigin(pAttacker);
 
-	if ( !hasSomeConditions(CONDITION_SEE_CUR_ENEMY) )
+	if ( !hasSomeConditions(CONDITION_SEE_CUR_ENEMY) && !bot_stop.GetBool() && false ) // CUSTOM MOD TO DISABLE VIEW ANGLE CHANGE ON SELF-DAMAGE (I.E. ROCKET JUMP) (for some reason bot_stop isnt set to 1 like it is in the config file)
 	{
 		m_fLookSetTime = 0.0f;
 		setLookAtTask(LOOK_HURT_ORIGIN);
@@ -2328,6 +2328,33 @@ void CBot :: doMove ()
 	}
 }
 
+void CBot :: doModMove ( int ws, int ad ) // CUSTOM MOD CONTROL (called by native sm_botMove)
+{
+	m_fForwardSpeed = m_fIdealMoveSpeed * ws;
+	// bots side move speed
+	m_fSideSpeed = m_fIdealMoveSpeed * ad;
+}
+
+void CBot :: setModLook ( const Vector& vLook ) // CUSTOM MOD (for now just snap to appropriate angles)
+{
+	QAngle requiredAngles;
+	VectorAngles(vLook-getEyePosition(), requiredAngles);
+	CBotGlobals::fixFloatAngle(&requiredAngles.x);
+	CBotGlobals::fixFloatAngle(&requiredAngles.y);
+	m_vViewAngles = requiredAngles;
+
+	// Clamp pitch
+	if ( m_vViewAngles.x > 89.0f )
+		m_vViewAngles.x = 89.0f;
+	else if ( m_vViewAngles.x < -89.0f )
+		m_vViewAngles.x = -89.0f;
+}
+
+void CBot :: doModLook () // CUSTOM MOD
+{
+	// applying easing over time (hooked in think?)
+}
+
 bool CBot :: recentlySpawned (const float fTime) const
 {
 	return m_fSpawnTime + fTime > engine->Time();
@@ -2905,7 +2932,8 @@ void CBot :: doLook ()
 
 		QAngle requiredAngles;
 
-		VectorAngles(m_vLookAt-getEyePosition(),requiredAngles);
+		//VectorAngles(m_vLookAt-getEyePosition(),requiredAngles);
+		VectorAngles(m_vLookAt,requiredAngles); // CUSTOM MOD (replacing line above)
 		CBotGlobals::fixFloatAngle(&requiredAngles.x);
 		CBotGlobals::fixFloatAngle(&requiredAngles.y);
 
@@ -3021,16 +3049,16 @@ void CBot :: jump () const
 {
 	if ( m_pButtons->canPressButton(IN_JUMP) )
 	{		
-		m_pButtons->holdButton(IN_JUMP,0.0f/* time to press*/,0.5f/* hold time*/,0.5f/*let go time*/); 
-		// do the trademark jump & duck
-		m_pButtons->holdButton(IN_DUCK,0.2f/* time to press*/,0.3f/* hold time*/,0.5f/*let go time*/); 
+		m_pButtons->holdButton(IN_JUMP,0.0f/* time to press*/,0.15f/* hold time*/,0.15f/*let go time*/); // CUSTOM MOD DURATIONS
+		// do the trademark jump & duck (CUSTOM MOD: NOPE)
+		//m_pButtons->holdButton(IN_DUCK,0.2f/* time to press*/,0.3f/* hold time*/,0.5f/*let go time*/); 
 	}
 }
 
 void CBot :: duck (const bool hold) const
 {
 	if ( hold || m_pButtons->canPressButton(IN_DUCK) )
-		m_pButtons->holdButton(IN_DUCK,0.0f/* time to press*/,1.0f/* hold time*/,0.5f/*let go time*/); 
+		m_pButtons->holdButton(IN_DUCK,0.0f/* time to press*/,0.84f/* hold time*/,0.0f/*let go time*/); // CUSTOM MOD DURATIONS
 }
 
 // TODO: perceptron method
@@ -3351,11 +3379,51 @@ int CBots::levelInit()
 
 #define CHECK_STRING(str) (((str)==NULL)?"NULL":(str))
 
+
+////////////////////////////////////////////////////////////
+// CUSTOM MOD think overwrite for airshot ML - base_thomas
+void CBot :: mlThink ()
+{
+	static float fTime;
+	fTime = engine->Time();
+
+	/*/ important!!!
+	m_iLookPriority = 0;
+	m_iMovePriority = 0;
+	m_iMoveSpeedPriority = 0;*/
+
+	// if bot is not in game, start it!!!
+	if ( !startGame() )
+	{
+		doButtons();
+		return; // don't do anything just now
+	}
+	doButtons();
+
+	if ( !isAlive() ) {
+		currentlyDead();
+		//return;
+	} else {
+		//doMove();
+		doLook();
+
+		if ( m_fNextThink > fTime )
+			return;
+		m_pButtons->letGoAllButtons(false);
+		m_fNextThink = fTime + 0.03f;
+		updateConditions();
+
+		//setMoveLookPriority(MOVELOOK_ATTACK);
+		//logger->Log(LogLevel::FATAL, "modthink done");
+	}
+}
+////////////////////////////////////////////////////////////
+
 void CBots :: botThink ()
 {
 	static CBot *pBot;
 
-	const bool bBotStop = bot_stop.GetInt() > 0;
+	const bool bBotStop = true; //bot_stop.GetInt() > 0; //cvar doesn't work reliably?
 
 #ifdef _DEBUG
 
@@ -3399,6 +3467,13 @@ void CBots :: botThink ()
 
 				#endif
 			}
+			
+////////////////////////////////////////////////////////////
+			// CUSTOM MOD think overwrite for airshot ML - base_thomas
+			//pBot->setMoveLookPriority(MOVELOOK_THINK);
+			pBot->mlThink();
+			//pBot->setMoveLookPriority(MOVELOOK_EVENT);
+////////////////////////////////////////////////////////////
 
 			const char* command = bot_command.GetString();
 
