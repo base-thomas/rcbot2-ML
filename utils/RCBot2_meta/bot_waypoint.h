@@ -378,6 +378,9 @@ public:
 
 	int getPath(int i) const;
 
+	WaypointList::const_iterator begin() const { return m_thePaths.begin(); }
+	WaypointList::const_iterator end() const { return m_thePaths.end(); }
+
 	void load(std::fstream& bfp, int iVersion);
 
 	void save(std::fstream& bfp);

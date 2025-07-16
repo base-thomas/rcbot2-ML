@@ -543,27 +543,30 @@ float CCSSBot::getNextAttackDelay()
 void CCSSBot::modAim(edict_t *pEntity, Vector &v_origin, Vector *v_desired_offset, Vector &v_size, const float fDist, const float fDist2D)
 {
 	static bool aimforhead;
-	static CBotWeapon *pWp;
+	static CBotWeapon* pWp;
 
-	CBot::modAim(pEntity,v_origin,v_desired_offset,v_size,fDist,fDist2D);
+	CBot::modAim(pEntity, v_origin, v_desired_offset, v_size, fDist, fDist2D);
 
 	aimforhead = true;
 	pWp = getCurrentWeapon();
 
-	switch (pWp->getID())
+	if (pWp) // Check if pWp is not nullptr - [APG]RoboCop[CL]
 	{
+		switch (pWp->getID())
+		{
 		case CS_WEAPON_AWP:
 		case CS_WEAPON_SUPERSHOTGUN:
 		case CS_WEAPON_AUTOSHOTGUN:
+			{
+				aimforhead = false;
+				break;
+			}
+		}
+
+		if (pWp->isMelee())
 		{
 			aimforhead = false;
-			break;
 		}
-	}
-
-	if ( pWp && pWp->isMelee() )
-	{
-		aimforhead = false;
 	}
 
 	if(hasSomeConditions(CONDITION_SEE_ENEMY_HEAD) && aimforhead)
@@ -580,7 +583,7 @@ void CCSSBot::modAim(edict_t *pEntity, Vector &v_origin, Vector *v_desired_offse
 		v_desired_offset->x = 0;
 		v_desired_offset->y = 0;
 		v_desired_offset->z = 0;
-}
+	}
 }
 
 void CCSSBot::modThink()

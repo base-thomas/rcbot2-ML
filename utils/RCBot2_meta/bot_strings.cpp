@@ -69,7 +69,15 @@ char* CStrings::getString(const char* szString)
 	if (szString == nullptr)
 		return nullptr;
 
+	// Ensure MAX_STRINGS_HASH is large enough or validate the index - [APG]RoboCop[CL]
 	const unsigned short iHash = szString[0] % MAX_STRINGS_HASH;
+
+	// Validate that iHash is within bounds
+	if (iHash >= MAX_STRINGS_HASH)
+	{
+		// Handle error appropriately (e.g., log, throw exception, etc.) - [APG]RoboCop[CL]
+		return nullptr;
+	}
 
 	for (char* const szCompString : m_Strings[iHash])
 	{

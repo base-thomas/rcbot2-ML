@@ -69,6 +69,7 @@
 #include <array>
 #include <cmath>
 #include <cstring>
+#include <numeric>
 
 #include "rcbot/tf2/conditions.h"
 #include "rcbot/entprops.h"
@@ -418,19 +419,12 @@ void CBotFortress ::pickedUpFlag()
 
 void CBotFortress :: checkHealingValid ()
 {
-	if ( m_pHeal )
+	if (m_pHeal)
 	{
-		if ( !CBotGlobals::entityIsValid(m_pHeal) || !CBotGlobals::entityIsAlive(m_pHeal) )
-		{
-			m_pHeal = nullptr;
-			removeCondition(CONDITION_SEE_HEAL);
-		}
-		else if ( !isVisible(m_pHeal) )
-		{
-			m_pHeal = nullptr;
-			removeCondition(CONDITION_SEE_HEAL);
-		}
-		else if ( getHealFactor(m_pHeal) == 0.0f )
+		if (!CBotGlobals::entityIsValid(m_pHeal) ||
+			!CBotGlobals::entityIsAlive(m_pHeal) ||
+			!isVisible(m_pHeal) ||
+			getHealFactor(m_pHeal) == 0.0f)
 		{
 			m_pHeal = nullptr;
 			removeCondition(CONDITION_SEE_HEAL);
@@ -1760,36 +1754,35 @@ bool CBotTF2 :: hurt ( edict_t *pAttacker, const int iHealthNow, const bool bDon
 		}
 	}
 
-	if ( pAttacker )
+	if ((m_iClass == TF_CLASS_SPY) && !isCloaked() &&
+		!CTeamFortress2Mod::isSentry(pAttacker, CTeamFortress2Mod::getEnemyTeam(m_iTeam)))
 	{
-		if ( (m_iClass == TF_CLASS_SPY) && !isCloaked() && !CTeamFortress2Mod::isSentry(pAttacker,CTeamFortress2Mod::getEnemyTeam(m_iTeam)) )
+		// TODO: make sure I'm not just caught in crossfire
+		// search for other team members
+		if (!m_StatsCanUse.stats.m_iTeamMatesVisible || !m_StatsCanUse.stats.m_iTeamMatesInRange)
+			m_fFrenzyTime = engine->Time() + randomFloat(2.0f, 6.0f);
+
+		if (isDisguised())
+			detectedAsSpy(pAttacker, true);
+
+		if (CBotGlobals::isPlayer(pAttacker) &&
+			(iHealthNow < rcbot_spy_runaway_health.GetInt()) &&
+			(CClassInterface::getTF2SpyCloakMeter(m_pEdict) > 0.3f))
 		{
-			
-			// TODO: make sure I'm not just caught in crossfire
-			// search for other team members
-			if ( !m_StatsCanUse.stats.m_iTeamMatesVisible || !m_StatsCanUse.stats.m_iTeamMatesInRange )
-				m_fFrenzyTime = engine->Time() + randomFloat(2.0f,6.0f);
+			// cloak and run
+			spyCloak();
+			// hide and find health
+			m_pSchedules->removeSchedule(SCHED_GOOD_HIDE_SPOT);
+			m_pSchedules->addFront(new CGotoHideSpotSched(this, m_vHurtOrigin, new CBotTF2CoverInterrupt()));
+			wantToShoot(false);
+			m_fFrenzyTime = 0.0f;
 
-			if ( isDisguised() )
-				detectedAsSpy(pAttacker,true);
+			if (hasEnemy())
+				setLastEnemy(m_pEnemy);
 
-			if ( CBotGlobals::isPlayer(pAttacker) && (iHealthNow<rcbot_spy_runaway_health.GetInt()) && (CClassInterface::getTF2SpyCloakMeter(m_pEdict) > 0.3f) )
-			{
-				// cloak and run
-				spyCloak();
-				// hide and find health
-				m_pSchedules->removeSchedule(SCHED_GOOD_HIDE_SPOT);
-				m_pSchedules->addFront(new CGotoHideSpotSched(this,m_vHurtOrigin,new CBotTF2CoverInterrupt()));		
-				wantToShoot(false);
-				m_fFrenzyTime = 0.0f;
+			m_pEnemy = nullptr; // reset enemy
 
-				if ( hasEnemy() )
-					setLastEnemy(m_pEnemy);
-
-				m_pEnemy = nullptr; // reset enemy
-
-				return true;
-			}
+			return true;
 		}
 	}
 
@@ -2622,7 +2615,7 @@ bool CBotTF2 :: canGotoWaypoint (const Vector& vPrevWaypoint, CWaypoint* pWaypoi
 						
 		}
 
-		if ( CTeamFortress2Mod::isMapType(TF_MAP_CART) || CTeamFortress2Mod::isMapType(TF_MAP_CPPL) || CTeamFortress2Mod::isMapType(TF_MAP_CARTRACE) || (std::strncmp(szmapname, "sd_offload", 10) == 0) || (std::strncmp(szmapname, "ctf_system", 10) == 0) || (std::strncmp(szmapname, "cp_helmsdeep_v2", 15) == 0))
+		if ( CTeamFortress2Mod::isMapType(TF_MAP_CART) || CTeamFortress2Mod::isMapType(TF_MAP_CPPL) || CTeamFortress2Mod::isMapType(TF_MAP_CARTRACE) || (std::strncmp(szmapname, "sd_offload", 10) == 0) || (std::strncmp(szmapname, "koth_namicott", 13) == 0) || (std::strncmp(szmapname, "ctf_system", 10) == 0) || (std::strncmp(szmapname, "cp_helmsdeep_v2", 15) == 0))
 		{
 			if ( m_pRedPayloadBomb.get() != nullptr)
 			{
@@ -2982,9 +2975,16 @@ void CBotTF2::modThink()
 			m_pDefendPayloadBomb = m_pBluePayloadBomb;
 		}
 	}
-	else if ((std::strncmp(szmapname, "sd_offload", 10) == 0) || (std::strncmp(szmapname, "kotc_", 5) == 0))
+	else if ((std::strncmp(szmapname, "sd_offload", 10) == 0))
 	{
 		if ((getTeam() == TF2_TEAM_BLUE || getTeam() == TF2_TEAM_RED) && m_bHasFlag)
+		{
+			m_pPushPayloadBomb = m_pBluePayloadBomb;
+		}
+	}
+	else if ((std::strncmp(szmapname, "koth_namicott", 13) == 0) || (std::strncmp(szmapname, "ctf_system", 10) == 0) || (std::strncmp(szmapname, "kotc_", 5) == 0))
+	{
+		if ((getTeam() == TF2_TEAM_BLUE || getTeam() == TF2_TEAM_RED))
 		{
 			m_pPushPayloadBomb = m_pBluePayloadBomb;
 		}
@@ -3013,9 +3013,9 @@ void CBotTF2::modThink()
 	{
 		const int _forcedClass = rcbot_force_class.GetInt();
 		// Change class if not same class as forced one or class was forced but not anymore
-		if (m_iClass != _forcedClass && ((_forcedClass > 0 && _forcedClass < 10) || (m_classWasForced && (_forcedClass < 1 || _forcedClass > 9))))
+		if (m_iClass != _forcedClass && (_forcedClass > 0 && _forcedClass < 10))
 		{
-			m_classWasForced = _forcedClass > 0 && _forcedClass < 10;
+			m_classWasForced = true;
 			chooseClass();
 			selectClass();
 		}
@@ -3693,7 +3693,7 @@ bool CBotTF2 :: wantToFollowEnemy()
 		return true; // I am ubered  GO!!!
 	if ( (pEnemy != nullptr) && CBotGlobals::isPlayer(pEnemy) && CTeamFortress2Mod::TF2_IsPlayerInvuln(pEnemy) )
 		return false; // Enemy is UBERED  -- don't follow
-	if ( (m_iCurrentDefendArea != 0) && (pEnemy != nullptr) && (CTeamFortress2Mod::isMapType(TF_MAP_CP) || CTeamFortress2Mod::isMapType(TF_MAP_CPPL) || std::strncmp(szmapname, "ctf_chouhen", 11) == 0) && (CTeamFortress2Mod::m_ObjectiveResource.GetNumControlPoints() > 0) )
+	if ( (m_iCurrentDefendArea != 0) && (pEnemy != nullptr) && (CTeamFortress2Mod::isMapType(TF_MAP_CP) || CTeamFortress2Mod::isMapType(TF_MAP_CPPL) || std::strncmp(szmapname, "ctf_chouhen", 11) == 0 || std::strncmp(szmapname, "ctf_haarp", 9) == 0 || std::strncmp(szmapname, "ctf_vector", 10) == 0 || std::strncmp(szmapname, "ctf_snowdrift", 13) == 0) && (CTeamFortress2Mod::m_ObjectiveResource.GetNumControlPoints() > 0) )
 	{
 		const Vector vDefend = CTeamFortress2Mod::m_ObjectiveResource.GetCPPosition(CTeamFortress2Mod::m_ObjectiveResource.m_WaypointAreaToIndexTranslation[m_iCurrentDefendArea]);
 
@@ -3832,13 +3832,12 @@ int CBotFortress :: getSpyDisguiseClass (const int iTeam) const
 	
 	if ( availableClasses.empty() )
 		return randomInt(1,9);
-	
-	float fTotal = 0.0f;
 
-	for (const int availableClass : availableClasses) //TODO: Improve for loop, replace it with std::accumulate ? [APG]RoboCop[CL]
-	{
-		fTotal += m_fClassDisguiseFitness[availableClass];
-	}
+	float fTotal = std::accumulate(availableClasses.begin(), availableClasses.end(), 0.0f,
+	                               [this](const float current_total, const int available_class)
+	                               {
+		                               return current_total + m_fClassDisguiseFitness[available_class];
+	                               });
 
 	if ( fTotal > 0.0f )
 	{
@@ -4118,18 +4117,17 @@ bool CBotTF2::healPlayer(edict_t* pPlayer, edict_t* pPrevPlayer)
 
 	if (m_fMedicUpdatePosTime < engine->Time())
 	{
-		static CClient *pClient;
+		static CClient* pClient;
 		static float fSpeed;
 		const float fRand = randomFloat(1.0f, 2.0f);
 
 		pClient = CClients::get(m_pHeal);
 
-		if (pClient)
-			fSpeed = pClient->getSpeed();
+		fSpeed = pClient->getSpeed(); // No need for the null check? [APG]RoboCop[CL]
 
 		m_fMedicUpdatePosTime = engine->Time() + (fRand * (1.0f - (fSpeed / 320)));
 
-		if (p && (p->GetLastUserCommand().buttons & IN_ATTACK))
+		if (p != nullptr && (p->GetLastUserCommand().buttons & IN_ATTACK))
 		{
 			static QAngle eyes;
 			// keep out of cross fire
@@ -4635,7 +4633,7 @@ void CBotTF2 :: getTasks ( unsigned iIgnore )
 				(!m_bIsCarryingObj || m_bIsCarryingSentry) && bMoveObjs && (m_fSentryPlaceTime > 0.0f) &&
 				!bHasFlag && m_pSentryGun && (CClassInterface::getSentryEnemy(m_pSentryGun) == nullptr) &&
 				((m_fLastSentryEnemyTime + 15.0f) < engine->Time()) &&
-				(!CTeamFortress2Mod::isMapType(TF_MAP_CP) || !(std::strncmp(str1, "ctf_chouhen", 11) == 0) ||
+				(!CTeamFortress2Mod::isMapType(TF_MAP_CP) || std::strncmp(str1, "ctf_chouhen", 11) != 0 || std::strncmp(szmapname, "ctf_haarp", 9) != 0 || std::strncmp(szmapname, "ctf_vector", 10) != 0 || std::strncmp(szmapname, "ctf_snowdrift", 13) != 0 ||
 					!CTeamFortress2Mod::isMapType(TF_MAP_CPPL) ||
 					CTeamFortress2Mod::m_ObjectiveResource.testProbWptArea(m_iSentryArea, m_iTeam)) &&
 				(fSentryPlaceTime > rcbot_move_sentry_time.GetFloat()) &&
@@ -4846,15 +4844,35 @@ void CBotTF2 :: getTasks ( unsigned iIgnore )
 		if ( m_bIsCarryingObj )
 			fDefendFlagUtility = 0.0f;
 	}
-	ADD_UTILITY_DATA(BOT_UTIL_GOTORESUPPLY_FOR_HEALTH, !bIsUbered && !m_bIsCarryingObj && !bHasFlag && pWaypointResupply && bNeedHealth && !m_pHealthkit, 1000.0f / fResupplyDist, CWaypoints::getWaypointIndex(pWaypointResupply))
+	ADD_UTILITY_DATA(BOT_UTIL_GOTORESUPPLY_FOR_HEALTH,
+	                 !bIsUbered && !m_bIsCarryingObj && !bHasFlag && pWaypointResupply && bNeedHealth && !m_pHealthkit,
+	                 1000.0f / fResupplyDist, CWaypoints::getWaypointIndex(pWaypointResupply))
 
-	ADD_UTILITY(BOT_UTIL_GETAMMOKIT, bNeedAmmo && m_pAmmo,1.0f + ((!CTeamFortress2Mod::hasRoundStarted() && CTeamFortress2Mod::isMapType(TF_MAP_MVM))?0.5f:0.0f))
-	ADD_UTILITY(BOT_UTIL_GETHEALTHKIT, bNeedHealth && m_pHealthkit,1.0f + ((!CTeamFortress2Mod::hasRoundStarted() && CTeamFortress2Mod::isMapType(TF_MAP_MVM))?0.5f:0.0f))
+	ADD_UTILITY(BOT_UTIL_GETAMMOKIT, bNeedAmmo && m_pAmmo,
+	            1.0f + ((!CTeamFortress2Mod::hasRoundStarted() && CTeamFortress2Mod::isMapType(TF_MAP_MVM))?0.5f:0.0f))
 
-	ADD_UTILITY(BOT_UTIL_GETFLAG, (CTeamFortress2Mod::isMapType(TF_MAP_CTF)||(CTeamFortress2Mod::isMapType(TF_MAP_RD)||(CTeamFortress2Mod::isMapType(TF_MAP_SD)&&CTeamFortress2Mod::canTeamPickupFlag_SD(iTeam,false)))) && !bHasFlag,fGetFlagUtility)
-	ADD_UTILITY(BOT_UTIL_GETFLAG_LASTKNOWN, (CTeamFortress2Mod::isMapType(TF_MAP_CTF)||(CTeamFortress2Mod::isMapType(TF_MAP_RD)||CTeamFortress2Mod::isMapType(TF_MAP_MVM)||(CTeamFortress2Mod::isMapType(TF_MAP_SD)&&CTeamFortress2Mod::canTeamPickupFlag_SD(iTeam,true)))) && !bHasFlag && (m_fLastKnownFlagTime && (m_fLastKnownFlagTime > engine->Time())), fGetFlagUtility+0.1f)
+	ADD_UTILITY(BOT_UTIL_GETHEALTHKIT, bNeedHealth && m_pHealthkit,
+	            1.0f + ((!CTeamFortress2Mod::hasRoundStarted() && CTeamFortress2Mod::isMapType(TF_MAP_MVM))?0.5f:0.0f))
 
-	ADD_UTILITY(BOT_UTIL_DEFEND_FLAG, CTeamFortress2Mod::isMapType(TF_MAP_MVM)||(CTeamFortress2Mod::isMapType(TF_MAP_CTF) && !bHasFlag)||(CTeamFortress2Mod::isMapType(TF_MAP_CP) && !bHasFlag)||(CTeamFortress2Mod::isMapType(TF_MAP_TC) && !bHasFlag)||(CTeamFortress2Mod::isMapType(TF_MAP_RD) && !bHasFlag), fDefendFlagUtility+0.1f)
+	ADD_UTILITY(BOT_UTIL_GETFLAG,
+	            (CTeamFortress2Mod::isMapType(TF_MAP_CTF)||(CTeamFortress2Mod::isMapType(TF_MAP_RD)||(CTeamFortress2Mod
+		            ::isMapType(TF_MAP_SD)&&CTeamFortress2Mod::canTeamPickupFlag_SD(iTeam,false)))) && !bHasFlag,
+	            fGetFlagUtility)
+
+	ADD_UTILITY(BOT_UTIL_GETFLAG_LASTKNOWN,
+	            (CTeamFortress2Mod::isMapType(TF_MAP_CTF)||(CTeamFortress2Mod::isMapType(TF_MAP_RD)||CTeamFortress2Mod::
+		            isMapType(TF_MAP_MVM)||(CTeamFortress2Mod::isMapType(TF_MAP_SD)&&CTeamFortress2Mod::
+			            canTeamPickupFlag_SD(iTeam,true)))) && !bHasFlag && (m_fLastKnownFlagTime && (
+		            m_fLastKnownFlagTime > engine->Time())), fGetFlagUtility+0.1f)
+
+	ADD_UTILITY(BOT_UTIL_DEFEND_FLAG,
+			CTeamFortress2Mod::isMapType(TF_MAP_MVM) ||
+			(CTeamFortress2Mod::isMapType(TF_MAP_CTF) && !bHasFlag) ||
+			(CTeamFortress2Mod::isMapType(TF_MAP_CP) && !bHasFlag) ||
+			(CTeamFortress2Mod::isMapType(TF_MAP_TC) && !bHasFlag) ||
+			(CTeamFortress2Mod::isMapType(TF_MAP_RD) && !bHasFlag && (iClass != TF_CLASS_ENGINEER)),
+			fDefendFlagUtility + 0.1f)
+
 	ADD_UTILITY(BOT_UTIL_DEFEND_FLAG_LASTKNOWN, !bHasFlag &&
 		(CTeamFortress2Mod::isMapType(TF_MAP_CTF) || CTeamFortress2Mod::isMapType(TF_MAP_MVM) || CTeamFortress2Mod::isMapType(TF_MAP_TC) || CTeamFortress2Mod::isMapType(TF_MAP_CP) || CTeamFortress2Mod::isMapType(TF_MAP_RD) ||
 		(CTeamFortress2Mod::isMapType(TF_MAP_SD) && 
@@ -4862,14 +4880,16 @@ void CBotTF2 :: getTasks ( unsigned iIgnore )
 		(m_fLastKnownTeamFlagTime && (m_fLastKnownTeamFlagTime > engine->Time())), 
 		fDefendFlagUtility + (randomFloat (0.0f, 0.2f) - 0.1f))
 
-	ADD_UTILITY(BOT_UTIL_SNIPE, (iClass == TF_CLASS_SNIPER) && m_pWeapons->getCurrentWeaponInSlot(0)
-		&& !m_pWeapons->getCurrentWeaponInSlot(0)->isProjectile()
-		&& !m_pWeapons->getCurrentWeaponInSlot(0)->outOfAmmo(this) && !hasSomeConditions(CONDITION_PARANOID)
+	ADD_UTILITY(BOT_UTIL_SNIPE, (iClass == TF_CLASS_SNIPER) && m_pWeapons->hasWeapon(TF2_WEAPON_SNIPERRIFLE)
+		&& !m_pWeapons->hasWeapon(TF2_WEAPON_BOW)
+		&& !m_pWeapons->getWeapon(CWeapons::getWeapon(TF2_WEAPON_SNIPERRIFLE))->outOfAmmo(this) && !hasSomeConditions(CONDITION_PARANOID)
 		&& !bHasFlag && (getHealthPercent() > 0.2f), 0.95f)
 	//ADD_UTILITY(BOT_UTIL_SNIPE_CROSSBOW, (iClass == TF_CLASS_SNIPER) && m_pWeapons->hasWeapon(TF2_WEAPON_BOW) && !m_pWeapons->getWeapon(CWeapons::getWeapon(TF2_WEAPON_BOW))->outOfAmmo(this) && !hasSomeConditions(CONDITION_PARANOID) && !bHasFlag && (getHealthPercent()>0.2f), 0.95f)
 
 	ADD_UTILITY(BOT_UTIL_ROAM,true,0.0001f)
-	ADD_UTILITY_DATA(BOT_UTIL_FIND_NEAREST_HEALTH,!bHasFlag&&bNeedHealth&&!m_pHealthkit&&pWaypointHealth,(1000.0f/fHealthDist) + ((!CTeamFortress2Mod::hasRoundStarted() && CTeamFortress2Mod::isMapType(TF_MAP_MVM))?0.5f:0.0f),CWaypoints::getWaypointIndex(pWaypointHealth))
+	ADD_UTILITY_DATA(BOT_UTIL_FIND_NEAREST_HEALTH, !bHasFlag&&bNeedHealth&&!m_pHealthkit&&pWaypointHealth,
+	                 (1000.0f/fHealthDist) + ((!CTeamFortress2Mod::hasRoundStarted() && CTeamFortress2Mod::isMapType(
+		                 TF_MAP_MVM))?0.5f:0.0f), CWaypoints::getWaypointIndex(pWaypointHealth))
 
 	ADD_UTILITY(BOT_UTIL_FIND_MEDIC_FOR_HEALTH,(m_iClass != TF_CLASS_MEDIC) && !bHasFlag && bNeedHealth && m_pLastSeeMedic.hasSeen(10.0f),1.0f)
 
@@ -4877,7 +4897,11 @@ void CBotTF2 :: getTasks ( unsigned iIgnore )
 	{
 		pWeapon = m_pWeapons->getPrimaryWeapon();
 
-		ADD_UTILITY_DATA(BOT_UTIL_ATTACK_SENTRY, (distanceFrom(m_pNearestEnemySentry) >= CWaypointLocations::REACHABLE_RANGE) && (m_iClass!=TF_CLASS_SPY)&& pWeapon && !pWeapon->outOfAmmo(this) && pWeapon->primaryGreaterThanRange(static_cast<float>(TF2_MAX_SENTRYGUN_RANGE)+32.0f), 0.7f, ENTINDEX(m_pNearestEnemySentry.get()))
+		ADD_UTILITY_DATA(BOT_UTIL_ATTACK_SENTRY,
+		                 (distanceFrom(m_pNearestEnemySentry) >= CWaypointLocations::REACHABLE_RANGE) && (m_iClass!=
+			                 TF_CLASS_SPY)&& pWeapon && !pWeapon->outOfAmmo(this) && pWeapon->primaryGreaterThanRange(
+			                 static_cast<float>(TF2_MAX_SENTRYGUN_RANGE)+32.0f), 0.7f,
+		                 ENTINDEX(m_pNearestEnemySentry.get()))
 	}
 	// only attack if attack area is > 0
 	ADD_UTILITY(BOT_UTIL_ATTACK_POINT,!CTeamFortress2Mod::TF2_IsPlayerInvuln(m_pEdict) && (m_fAttackPointTime<engine->Time()) && 
@@ -4887,11 +4911,14 @@ void CBotTF2 :: getTasks ( unsigned iIgnore )
 			(CTeamFortress2Mod::isMapType(TF_MAP_ARENA)&&CTeamFortress2Mod::isArenaPointOpen())||
 			(CTeamFortress2Mod::isMapType(TF_MAP_SAXTON)&&CTeamFortress2Mod::isArenaPointOpen()) ||
 			(CTeamFortress2Mod::isMapType(TF_MAP_KOTH)&&CTeamFortress2Mod::isArenaPointOpen())||
-			CTeamFortress2Mod::isMapType(TF_MAP_CP)||std::strncmp(szmapname, "ctf_chouhen", 11) == 0||CTeamFortress2Mod::isMapType(TF_MAP_CPPL)||CTeamFortress2Mod::isMapType(TF_MAP_TC)),fGetFlagUtility)
+			CTeamFortress2Mod::isMapType(TF_MAP_CP)||std::strncmp(szmapname, "ctf_chouhen", 11) == 0||std::strncmp(
+				szmapname, "ctf_haarp", 9) == 0||std::strncmp(szmapname, "ctf_vector", 10) == 0||std::strncmp(szmapname,
+				"ctf_snowdrift", 13) == 0||CTeamFortress2Mod::isMapType(TF_MAP_CPPL)||CTeamFortress2Mod::isMapType(
+				TF_MAP_TC)), fGetFlagUtility)
 
 	// only defend if defend area is > 0
 	// (!CTeamFortress2Mod::isAttackDefendMap()||(m_iTeam==TF2_TEAM_RED))
-	ADD_UTILITY(BOT_UTIL_DEFEND_POINT, (m_iCurrentDefendArea>0) && 
+	ADD_UTILITY(BOT_UTIL_DEFEND_POINT, (m_iCurrentDefendArea>0) && (iClass != TF_CLASS_ENGINEER) && 
 		(CTeamFortress2Mod::isMapType(TF_MAP_MVM)||CTeamFortress2Mod::isMapType(TF_MAP_SD)||CTeamFortress2Mod::isMapType(TF_MAP_CART)||
 		CTeamFortress2Mod::isMapType(TF_MAP_CARTRACE)||CTeamFortress2Mod::isMapType(TF_MAP_ARENA)||CTeamFortress2Mod::isMapType(TF_MAP_SAXTON) ||
 		CTeamFortress2Mod::isMapType(TF_MAP_KOTH)||CTeamFortress2Mod::isMapType(TF_MAP_CP)|| CTeamFortress2Mod::isMapType(TF_MAP_CPPL)||
@@ -5062,9 +5089,18 @@ void CBotTF2 :: getTasks ( unsigned iIgnore )
 				// Goto Payload bomb
 		}
 	}
+	else if ((std::strncmp(szmapname, "koth_namicott", 13) == 0))
+	{
+		if ((iTeam == TF2_TEAM_BLUE || iTeam == TF2_TEAM_RED))
+		{
+			ADD_UTILITY(BOT_UTIL_PUSH_PAYLOAD_BOMB, (m_pPushPayloadBomb != NULL),
+				fGetFlagUtility)
+				// Goto Payload bomb
+		}
+	}
 	else if (std::strncmp(szmapname, "kotc_", 5) == 0)
 	{
-		if ((iTeam == TF2_TEAM_BLUE || iTeam == TF2_TEAM_RED) && m_bHasFlag)
+		if ((iTeam == TF2_TEAM_BLUE || iTeam == TF2_TEAM_RED))
 		{
 			ADD_UTILITY(BOT_UTIL_PUSH_PAYLOAD_BOMB, (m_pPushPayloadBomb != NULL),
 				fGetFlagUtility)
@@ -5549,7 +5585,7 @@ bool CBotTF2 :: executeAction ( CBotUtility *util )//eBotAction id, CWaypoint *p
 			{
 				float fprob;
 
-				if ( (CTeamFortress2Mod::isMapType(TF_MAP_CARTRACE) || CTeamFortress2Mod::isMapType(TF_MAP_CPPL) || CTeamFortress2Mod::isMapType(TF_MAP_CART) || (std::strncmp(szmapname, "sd_offload", 10) == 0) || (std::strncmp(szmapname, "ctf_system", 10) == 0) || (std::strncmp(szmapname, "cp_helmsdeep_v2", 15) == 0)) )
+				if ( (CTeamFortress2Mod::isMapType(TF_MAP_CARTRACE) || CTeamFortress2Mod::isMapType(TF_MAP_CPPL) || CTeamFortress2Mod::isMapType(TF_MAP_CART) || (std::strncmp(szmapname, "sd_offload", 10) == 0) || (std::strncmp(szmapname, "koth_namicott", 13) == 0) || (std::strncmp(szmapname, "ctf_system", 10) == 0) || (std::strncmp(szmapname, "cp_helmsdeep_v2", 15) == 0)) )
 				{
 					if ( m_pDefendPayloadBomb != nullptr)
 					{
@@ -6317,13 +6353,15 @@ bool CBotTF2 :: executeAction ( CBotUtility *util )//eBotAction id, CWaypoint *p
 						Vector vStand;
 						vStand = pStand->getOrigin();
 
-						if ( pWaypoint )
+						if (!pWaypoint)
 						{
-							m_pSchedules->add(new CBotTF2DemoPipeTrapSched(iDemoTrapType,vStand,vPoint,Vector(150,150,20),false,pWaypoint->getArea()));
-							return true;
+							// Handle the null case appropriately [APG]RoboCop[CL]
+							return false;
 						}
+						// Proceed with the current logic [APG]RoboCop[CL]
+						m_pSchedules->add(new CBotTF2DemoPipeTrapSched(iDemoTrapType, vStand, vPoint, Vector(150, 150, 20), false, pWaypoint->getArea()));
+						return true;
 					}
-
 				}
 			}
 			break;
@@ -6868,7 +6906,8 @@ void CBotTF2::modAim(edict_t* pEntity, Vector& v_origin, Vector* v_desired_offse
 			//{
 			if (CClassInterface::getVelocity(pEntity, &vVelocity))
 			{
-				if (pClient && (vVelocity == Vector(0, 0, 0)))
+				assert(pClient != nullptr);
+				if (vVelocity == Vector(0, 0, 0))
 					vVelocity = pClient->getVelocity();
 			}
 			else if (pClient)
@@ -7649,7 +7688,8 @@ bool CBotTF2::isEnemy(edict_t* pEdict, const bool bCheckWeapons)
 	{
 		if ( CBotGlobals::getTeam(pEdict) != getTeam() )
 		{
-			if (pEdict != nullptr && CBotGlobals::entityIsValid(pEdict)) {
+			assert(pEdict != nullptr);
+			if (CBotGlobals::entityIsValid(pEdict)) {
 				const int edictIndex = engine->IndexOfEdict(pEdict);
 				if (CTF2Conditions::TF2_IsPlayerInCondition(edictIndex, TFCond_UberchargedHidden))
 					return false; // Don't attack MvM bots who are inside spawn.
@@ -7714,6 +7754,7 @@ bool CBotTF2::isEnemy(edict_t* pEdict, const bool bCheckWeapons)
 					{
 						const int iConds = CClassInterface::getTF2Conditions(pEdict);
 						const bool bExposedCloaked = CClassInterface::getTF2SpyCloakMeter(pEdict) == 0.0f
+							|| ((CTeamFortress2Mod::isMapType(TF_MAP_ZI) || CTeamFortress2Mod::isMapType(TF_MAP_SAXTON)) && (CTF2Conditions::TF2_IsPlayerInCondition(edictIndex, TFCond_Kritzkrieged) || CTF2Conditions::TF2_IsPlayerInCondition(edictIndex, TFCond_Buffed))) /*Buff exposes invisibility - RussiaTails*/
 							|| CTeamFortress2Mod::TF2_IsPlayerOnFire(
 								pEdict)        // if he is on fire and cloaked I can see him
 							|| iConds & (1 << 9)  /* Flicker */
@@ -7735,6 +7776,11 @@ bool CBotTF2::isEnemy(edict_t* pEdict, const bool bCheckWeapons)
 						// - Just cloaked within fSpyAttackAfterCloakTime seconds & is not using dead ringer
 						bValid = bExposedCloaked
 							|| (fSpyLastUncloakedTime < fSpyAttackAfterCloakTime && !(iConds & (1 << 13)));
+						if ((CTeamFortress2Mod::isMapType(TF_MAP_ZI) || CTeamFortress2Mod::isMapType(TF_MAP_SAXTON)) && (CTF2Conditions::TF2_IsPlayerInCondition(edictIndex, TFCond_Kritzkrieged) || CTF2Conditions::TF2_IsPlayerInCondition(edictIndex, TFCond_Buffed))) //Buff exposes invisibility - RussiaTails
+						{
+							bIsInvisible = false;
+						}
+						
 					}
 					else if ( dTeam == 0 ) // not disguised
 					{
@@ -7746,6 +7792,10 @@ bool CBotTF2::isEnemy(edict_t* pEdict, const bool bCheckWeapons)
 						bFoundSpy = false; // disguised as enemy!
 					}
 					else if ( dIndex == ENTINDEX(m_pEdict)) // if he is disguised as me -- he must be a spy!
+					{
+						bValid = true;
+					}
+					else if (CTeamFortress2Mod::isMapType(TF_MAP_ZI)) // in Zombie Infection, spy's diguise uses a normal player model (with weapons) instead of Voodoo-Cursed Soul - RussiaTails
 					{
 						bValid = true;
 					}
@@ -7826,6 +7876,10 @@ bool CBotTF2::isEnemy(edict_t* pEdict, const bool bCheckWeapons)
 	{
 		bValid = true;
 	}
+	else if (!std::strcmp(pEdict->GetClassName(), "tf_merasmus_trick_or_treat_prop") && (CClassInterface::getTeam(pEdict) != m_iTeam))
+	{
+		bValid = true;
+	}
 	else if ((std::strncmp(szmapname, "koth_bound_event_rc3a", 21) == 0) && !std::strcmp(pEdict->GetClassName(), "func_breakable") && (CClassInterface::getTeam(pEdict) != m_iTeam))
 	{
 		bValid = true;
@@ -7844,7 +7898,7 @@ bool CBotTF2::isEnemy(edict_t* pEdict, const bool bCheckWeapons)
 			setLookAtTask(LOOK_EDICT);
 		}
 	}
-	else if ((std::strncmp(szmapname, "stt_", 4) == 0) && !std::strcmp(pEdict->GetClassName(), "tank_boss") && (CClassInterface::getTeam(pEdict) != m_iTeam) /* && (CBotGlobals::getTeam(pEdict) != TF2_TEAM_BLUE) //causes crash. Probably code paradox by me :)*/)
+	else if ((std::strncmp(szmapname, "ctf_pressure", 12) == 0) && !std::strcmp(pEdict->GetClassName(), "generic_actor") && (CClassInterface::getTeam(pEdict) != m_iTeam))
 	{
 		bValid = true;
 	}
@@ -8049,7 +8103,7 @@ void CBotTF2 :: enemyAtIntel ( Vector vPos, const int type, const int iArea )
 		}
 	}
 
-	if ( CBotGlobals::entityIsValid(m_pDefendPayloadBomb) && (CTeamFortress2Mod::isMapType(TF_MAP_CART)||CTeamFortress2Mod::isMapType(TF_MAP_CPPL)||CTeamFortress2Mod::isMapType(TF_MAP_CARTRACE)||(std::strncmp(szmapname, "sd_offload", 10) == 0) || (std::strncmp(szmapname, "ctf_system", 10) == 0) || (std::strncmp(szmapname, "cp_helmsdeep_v2", 15) == 0)) )
+	if ( CBotGlobals::entityIsValid(m_pDefendPayloadBomb) && (CTeamFortress2Mod::isMapType(TF_MAP_CART)||CTeamFortress2Mod::isMapType(TF_MAP_CPPL)||CTeamFortress2Mod::isMapType(TF_MAP_CARTRACE)||(std::strncmp(szmapname, "sd_offload", 10) == 0) || (std::strncmp(szmapname, "koth_namicott", 13) == 0) || (std::strncmp(szmapname, "ctf_system", 10) == 0) || (std::strncmp(szmapname, "cp_helmsdeep_v2", 15) == 0)) )
 	{
 		vPos = CBotGlobals::entityOrigin(m_pDefendPayloadBomb);
 	}
@@ -8059,7 +8113,7 @@ void CBotTF2 :: enemyAtIntel ( Vector vPos, const int type, const int iArea )
 		if ( ( m_iTrapType != TF_TRAP_TYPE_POINT ) || (iArea == m_iTrapCPIndex) )
 		{
 			// Stickies at PL Capture or bomb point
-			if ( (( m_iTrapType == TF_TRAP_TYPE_POINT ) || ( m_iTrapType == TF_TRAP_TYPE_PL )) && ( CTeamFortress2Mod::isMapType(TF_MAP_CART) || CTeamFortress2Mod::isMapType(TF_MAP_CPPL) || CTeamFortress2Mod::isMapType(TF_MAP_CARTRACE)||(std::strncmp(szmapname, "sd_offload", 10) == 0) || (std::strncmp(szmapname, "ctf_system", 10) == 0) || (std::strncmp(szmapname, "cp_helmsdeep_v2", 15) == 0)) )
+			if ( (( m_iTrapType == TF_TRAP_TYPE_POINT ) || ( m_iTrapType == TF_TRAP_TYPE_PL )) && ( CTeamFortress2Mod::isMapType(TF_MAP_CART) || CTeamFortress2Mod::isMapType(TF_MAP_CPPL) || CTeamFortress2Mod::isMapType(TF_MAP_CARTRACE)||(std::strncmp(szmapname, "sd_offload", 10) == 0) || (std::strncmp(szmapname, "koth_namicott", 13) == 0) || (std::strncmp(szmapname, "ctf_system", 10) == 0) || (std::strncmp(szmapname, "cp_helmsdeep_v2", 15) == 0)) )
 			{
 				edict_t *pBomb;
 
@@ -8092,7 +8146,7 @@ void CBotTF2 :: enemyAtIntel ( Vector vPos, const int type, const int iArea )
 	if ( m_iClass == TF_CLASS_ENGINEER )
 		return; // got work to do...
 
-	if ((distanceFrom(vPos) < 768.0f) && (CTeamFortress2Mod::isMapType(TF_MAP_CP) || std::strncmp(szmapname, "ctf_chouhen", 11) == 0 ||  CTeamFortress2Mod::isMapType(TF_MAP_CPPL) || CTeamFortress2Mod::isMapType(TF_MAP_KOTH)))
+	if ((distanceFrom(vPos) < 768.0f) && (CTeamFortress2Mod::isMapType(TF_MAP_CP) || std::strncmp(szmapname, "ctf_chouhen", 11) == 0 || std::strncmp(szmapname, "ctf_haarp", 9) == 0 || std::strncmp(szmapname, "ctf_vector", 10) == 0 || std::strncmp(szmapname, "ctf_snowdrift", 13) == 0 ||  CTeamFortress2Mod::isMapType(TF_MAP_CPPL) || CTeamFortress2Mod::isMapType(TF_MAP_KOTH)))
 	{
 		m_vListenPosition = vPos;
 		m_bListenPositionValid = true;

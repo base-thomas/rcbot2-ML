@@ -579,9 +579,9 @@ void CDODBot :: seeFriendlyDie ( edict_t *pDied, edict_t *pKiller, CWeapon *pWea
 						CWaypointTypes::W_FL_MACHINEGUN))) != nullptr)
 						{	
 							ADD_UTILITY_WEAPON_DATA_VECTOR(BOT_UTIL_MOVEUP_MG,
-							                               pMachineGun && !pMachineGun->outOfAmmo(this), 1.0f,
-							                               pMachineGun, CWaypoints::getWaypointIndex(pWaypoint),
-							                               m_vListenPosition)
+														   pMachineGun && !pMachineGun->outOfAmmo(this), 1.0f,
+														   pMachineGun, CWaypoints::getWaypointIndex(pWaypoint),
+														   m_vListenPosition)
 
 							//m_pSchedules->add(new CDeployMachineGunSched(pMachineGun,pWaypoint,m_vListenPosition));
 
@@ -788,77 +788,64 @@ void CDODBot :: spawnInit ()
 	m_LastHearVoiceCommand = DOD_VC_INVALID;
 }
 
-bool CDODBot :: isEnemy ( edict_t *pEdict, const bool bCheckWeapons )
+bool CDODBot::isEnemy(edict_t* pEdict, const bool bCheckWeapons)
 {
-	const int entity_index = ENTINDEX(pEdict);
+//	const int entity_index = ENTINDEX(pEdict);
 //#ifdef _DEBUG
 //	const char *pszClassname = pEdict->GetClassName();
 
 //#endif
 
-	if ( entity_index == 0 )
+	if (!pEdict) // Check for nullptr at the start
+		return false;
+
+	const int entity_index = ENTINDEX(pEdict);
+
+	if (entity_index == 0)
 		return false; // worldspawn
 
-	if ( entity_index > gpGlobals->maxClients )
+	if (entity_index > gpGlobals->maxClients)
 	{
 		const bool bRegisteredBreakable = CDODMod::isBreakableRegistered(pEdict, m_iTeam);
-
-		if ( !CBotGlobals::isBreakableOpen(pEdict) && ((pEdict == m_pNearestBreakable) || bRegisteredBreakable) )
+		if (!CBotGlobals::isBreakableOpen(pEdict) && ((pEdict == m_pNearestBreakable) || bRegisteredBreakable))
 		{
-
-			/*if ( std::strcmp("dod_ragdoll",pszClassname) == 0 )
+			if (rcbot_shoot_breakables.GetBool())
 			{
-				// break;
-				return false;
-			}*/
-
-			if ( rcbot_shoot_breakables.GetBool() )
-			{ 
-				if ( bRegisteredBreakable )  // this breakable is registered as explosive only
+				if (bRegisteredBreakable) // this breakable is registered as explosive only
 				{
 					return (distanceFrom(pEdict) > BLAST_RADIUS) && m_pWeapons->hasExplosives();
 				}
-				//else if ( (m_fLastSeeEnemy + 5.0f) > engine->Time() )
-				if ( DotProductFromOrigin(CBotGlobals::entityOrigin(pEdict)) > rcbot_shoot_breakable_cos.GetFloat() )
-					return ((m_fLastSeeEnemyPlayer+3.0f) < engine->Time()) && (distanceFrom(pEdict) < rcbot_shoot_breakable_dist.GetFloat()) && (CClassInterface::getPlayerHealth(pEdict) > 0);
+				if (DotProductFromOrigin(CBotGlobals::entityOrigin(pEdict)) > rcbot_shoot_breakable_cos.GetFloat())
+					return ((m_fLastSeeEnemyPlayer + 3.0f) < engine->Time()) &&
+					(distanceFrom(pEdict) < rcbot_shoot_breakable_dist.GetFloat()) &&
+					(CClassInterface::getPlayerHealth(pEdict) > 0);
 			}
 		}
 
 		return false;
 	}
-
-	if ( !pEdict )
-		return false;
-
-	if ( !pEdict->GetUnknown() )
+	if (!pEdict->GetUnknown())
 		return false; // left the server
-
-	// if no target on - listen sever player is a non target
-	if ( rcbot_notarget.GetBool() && (entity_index == 1) )
+	if (rcbot_notarget.GetBool() && (entity_index == 1))
 		return false;
-
-	if ( pEdict == m_pEdict )
+	if (pEdict == m_pEdict)
 		return false;
-
-	// not alive -- false
-	if ( !CBotGlobals::entityIsAlive(pEdict) )
+	if (!CBotGlobals::entityIsAlive(pEdict))
 		return false;
-
-	if ( CBotGlobals::getTeam(pEdict) == getTeam() )
+	if (CBotGlobals::getTeam(pEdict) == getTeam())
 	{
-		if ( rcbot_ffa.GetBool() == false )
+		if (rcbot_ffa.GetBool() == false)
 			return false;
 
 		// if true continue down -- don't return
 	}
-
-	if ( bCheckWeapons && m_pNearestSmokeToEnemy )
+	if (bCheckWeapons && m_pNearestSmokeToEnemy)
 	{
-		if ( !isVisibleThroughSmoke(m_pNearestSmokeToEnemy,pEdict) )
+		if (!isVisibleThroughSmoke(m_pNearestSmokeToEnemy, pEdict))
 			return false;
 	}
 
-	return true;	
+	return true;
 }
 
 void CDODBot :: handleWeapons ()
@@ -911,18 +898,18 @@ void CDODBot :: touchedWpt ( CWaypoint *pWaypoint, const int iNextWaypoint, cons
 	}
 	else if ( pWaypoint->hasFlag(CWaypointTypes::W_FL_BOMB_TO_OPEN) )
 	{
-		edict_t *pBombTarget = CDODMod::getBombTarget(pWaypoint);
+		edict_t* pBombTarget = CDODMod::getBombTarget(pWaypoint);
 
-		if ( CBotGlobals::entityIsValid(pBombTarget) )
+		if (pBombTarget && CBotGlobals::entityIsValid(pBombTarget))
 		{
 			Vector vBombTarget = CBotGlobals::entityOrigin(pBombTarget);  // `vBombTarget` Unused? [APG]RoboCop[CL]
 			const int state = CClassInterface::getDODBombState(pBombTarget);
 
-			if ( state != 0 )
+			if (state != 0)
 				m_pNearestPathBomb = pBombTarget;
 
-			// find bomb target for this waypoint and place bomb
-			if ( pBombTarget && (state != 0) && (CClassInterface::getDODBombTeam(pBombTarget) == m_iTeam) )
+			// Additional checks and operations
+			if ((state != 0) && (CClassInterface::getDODBombTeam(pBombTarget) == m_iTeam))
 			{
 				// check if someone isn't bombing already
 				// if ( (state == 2) || CDODMod::m_Flags.isTeamMatePlanting(m_pEdict,m_iTeam,pWaypoint->getOrigin()) )
@@ -1532,7 +1519,7 @@ void CDODBot::hearVoiceCommand(edict_t* pPlayer, byte voiceCmd)
 						Vector vGoal = pWaypointAtFlag->getOrigin();
 
 						snipetask = new CBotDODSnipe(pWeapon, pWaypoint->getOrigin(), pWaypoint->getAimYaw(),
-						                             iFlagID != -1, vGoal.z + 48, pWaypoint->getFlags());
+													 iFlagID != -1, vGoal.z + 48, pWaypoint->getFlags());
 
 						removeCondition(CONDITION_PUSH);
 						findpath->setCompleteInterrupt(CONDITION_PUSH);
@@ -2113,7 +2100,7 @@ bool CDODBot :: executeAction ( CBotUtility *util )
 			Vector vEnemyOrigin = CBotGlobals::entityOrigin(pEnemy);
 
 			int iEnemyWpt = CWaypointLocations::NearestWaypoint(CBotGlobals::entityOrigin(pEnemy), 200.0f, -1, true,
-			                                                    true, false, nullptr, false, 0, false);
+																true, false, nullptr, false, 0, false);
 
 			WaypointList waypoints;
 
@@ -2626,9 +2613,9 @@ bool CDODBot :: executeAction ( CBotUtility *util )
 			removeCondition(CONDITION_SEE_CUR_ENEMY);
 			pFindPath->setCompleteInterrupt(CONDITION_SEE_CUR_ENEMY);
 			
-			if ( !CClassInterface::getVelocity(m_pLastEnemy,&vVelocity) )
+			if (!CClassInterface::getVelocity(m_pLastEnemy, &vVelocity))
 			{
-				if ( pClient )
+				if (pClient != nullptr)
 					vVelocity = pClient->getVelocity();
 			}
 
@@ -2801,6 +2788,8 @@ void CDODBot :: reachedCoverSpot (const int flags)
 	if ( pWeapon != nullptr)
 	{
 		bool bDontCrouchAndHide = false;
+
+		assert(pWeapon != nullptr);
 
 		if ( pWeapon && pWeapon->isDeployable() && !pWeapon->outOfAmmo(this) )
 		{
@@ -3122,7 +3111,7 @@ void CDODBot :: getTasks (unsigned iIgnore)
 			bAttackNearestFlag = !CDODMod::m_Flags.ownsFlag(iFlagID,m_iTeam) && ((CDODMod::m_Flags.numCappersRequired(iFlagID,m_iTeam)-CDODMod::m_Flags.numFriendliesAtCap(iFlagID,m_iTeam))>0);
 		}
 
-        if ( (m_pNearestFlag.get() == nullptr) || !bAttackNearestFlag )
+		if ( (m_pNearestFlag.get() == nullptr) || !bAttackNearestFlag )
 		{
 			if ( !hasSomeConditions(CONDITION_DEFENSIVE) && CDODMod::shouldAttack(m_iTeam) )
 			{
@@ -3305,8 +3294,8 @@ void CDODBot :: getTasks (unsigned iIgnore)
 
 		CBotWeapon *pBotWeapon = nullptr;
 		CBotWeapon* pBotSmokeGren = m_pWeapons->hasWeapon(DOD_WEAPON_SMOKE_US)
-			                            ? m_pWeapons->getWeapon(CWeapons::getWeapon(DOD_WEAPON_SMOKE_US))
-			                            : m_pWeapons->getWeapon(CWeapons::getWeapon(DOD_WEAPON_SMOKE_GER));
+										? m_pWeapons->getWeapon(CWeapons::getWeapon(DOD_WEAPON_SMOKE_US))
+										: m_pWeapons->getWeapon(CWeapons::getWeapon(DOD_WEAPON_SMOKE_GER));
 
 		if ( (hasSomeConditions(CONDITION_COVERT)||(m_fCurrentDanger >= 25.0f)) && pBotSmokeGren && pBotSmokeGren->hasWeapon() )
 			pBotWeapon = pBotSmokeGren;
@@ -3315,11 +3304,13 @@ void CDODBot :: getTasks (unsigned iIgnore)
 		else if ( m_pWeapons->hasWeapon(DOD_WEAPON_FRAG_GER) )
 			pBotWeapon = m_pWeapons->getWeapon(CWeapons::getWeapon(DOD_WEAPON_FRAG_GER));
 				
-		// if within throw distance and outside balst radius, I can throw it
+		// if within throw distance and outside blast radius, I can throw it
 		if ( pBotWeapon && (!pBotWeapon->isExplosive() || (fDistance > BLAST_RADIUS)) && ( fDistance < (MAX_GREN_THROW_DIST+BLAST_RADIUS) ) )
 		{
+			assert(pBotWeapon != nullptr);
+
 			ADD_UTILITY_WEAPON(BOT_UTIL_THROW_GRENADE, pBotWeapon && (pBotWeapon->getAmmo(this) > 0),
-			                   hasSomeConditions(CONDITION_GREN) ? fGrenUtil*2 : fGrenUtil, pBotWeapon)
+							   hasSomeConditions(CONDITION_GREN) ? fGrenUtil*2 : fGrenUtil, pBotWeapon)
 		}
 	}
 

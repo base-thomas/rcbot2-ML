@@ -134,13 +134,12 @@ CBotSquad *CBotSquads::AddSquadMember ( edict_t *pLeader, edict_t *pMember )
 	// no squad with leader, make one
 	CBotSquad *theSquad = new CBotSquad(pLeader, pMember);
 	
-	if ( theSquad != nullptr)
+	CBot* pBot;
+	m_theSquads.emplace_back(theSquad);
+
+	if ((pBot = CBots::getBotPointer(pLeader)) != nullptr)
 	{
-		CBot *pBot;
-		m_theSquads.emplace_back(theSquad);
-		
-		if ( (pBot = CBots::getBotPointer(pLeader)) != nullptr)
-			pBot->setSquad(theSquad);
+		pBot->setSquad(theSquad);
 	}
 	
 	return theSquad;

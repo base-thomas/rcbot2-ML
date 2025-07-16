@@ -426,6 +426,7 @@ public:
 			iszOverlay = NULL_STRING;
 			iPlayersRequired = 0;
 			iTimedPoints = 0;
+			// Initialize the raw array using a loop
 			for (string_t& i : iszPreviousPoint)
 			{
 				i = NULL_STRING;

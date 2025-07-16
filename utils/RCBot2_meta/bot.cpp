@@ -536,10 +536,10 @@ bool CBot :: checkStuck ()
 		}
 	}
 
-	if ( m_fWaypointStuckTime && m_fWaypointStuckTime < engine->Time() )
+	if (m_fWaypointStuckTime > 0.0f && m_fWaypointStuckTime < engine->Time())
 	{
 		m_bFailNextMove = true;
-		m_fWaypointStuckTime = engine->Time() + randomFloat(15.0f,20.0f);
+		m_fWaypointStuckTime = engine->Time() + randomFloat(15.0f, 20.0f);
 	}
 
 	if ( m_fCheckStuckTime > fTime )
@@ -1930,10 +1930,14 @@ void CBot :: updateStatistics ()
 		m_Stats.data = 0;
 		m_iStatsIndex = 0; // reset to be sure in case of m_iStatsIndex > gpGlobals->maxClients
 
-		if ( !m_uSquadDetail.b1.said_area_clear && m_StatsCanUse.stats.m_iEnemiesInRange == 0 && m_StatsCanUse.stats.m_iEnemiesVisible == 0 && m_StatsCanUse.stats.m_iTeamMatesInRange > 0)
+		if (!m_uSquadDetail.b1.said_area_clear && m_StatsCanUse.stats.m_iEnemiesInRange == 0 &&
+			m_StatsCanUse.stats.m_iEnemiesVisible == 0 && m_StatsCanUse.stats.m_iTeamMatesInRange > 0)
 		{
-			if (!inSquad() || (isSquadLeader() && (m_fLastSeeEnemy && m_fLastSeeEnemy + 10.0f < engine->Time())))
+			if (!inSquad() || (isSquadLeader() &&
+				(m_fLastSeeEnemy > 0.0f && m_fLastSeeEnemy + 10.0f < engine->Time())))
+			{
 				areaClear();
+			}
 
 			m_uSquadDetail.b1.said_area_clear = true;
 		}

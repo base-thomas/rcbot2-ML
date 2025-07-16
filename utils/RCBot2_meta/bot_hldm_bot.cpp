@@ -314,10 +314,10 @@ bool CHLDMBot :: executeAction (const eBotAction iAction)
 
 			pFindPath->setCompleteInterrupt(CONDITION_SEE_CUR_ENEMY);
 			
-			if ( !CClassInterface::getVelocity(m_pLastEnemy,&vVelocity) )
+			assert(pClient != nullptr); // Ensure pClient is not null - [APG]RoboCop[CL]
+			if (!CClassInterface::getVelocity(m_pLastEnemy, &vVelocity))
 			{
-				if ( pClient )
-					vVelocity = pClient->getVelocity();
+				vVelocity = pClient->getVelocity();
 			}
 
 			pSchedule->addTask(pFindPath);

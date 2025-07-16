@@ -308,7 +308,7 @@ public:
 		return count;
 	}
 
-	float isBombExplodeImminent (const int id) const
+	bool isBombExplodeImminent(const int id) const
 	{
 		return engine->Time() - m_fBombPlantedTime[id] > DOD_BOMB_EXPLODE_IMMINENT_TIME;
 	}

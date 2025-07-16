@@ -586,8 +586,6 @@ bool CTeamFortress2Mod::isBoss(edict_t* pEntity, float* fFactor)
 	{
 		if (m_pBoss.get() == pEntity)
 			return true;
-		// TODO: to allow RCBot to target Mafia Skeleton in pl_spineyard [APG]RoboCop[CL]
-		// for bots to target skeletons [APG]RoboCop[CL]
 		if (std::strcmp(pEntity->GetClassName(), "base_boss") == 0 || // For Krampus and any other NPCs which uses base_boss entity - RussiaTails
 			std::strcmp(pEntity->GetClassName(), "tf_robot_botler") == 0 || // Botler Robots from Embargo entity - RussiaTails
 			std::strcmp(pEntity->GetClassName(), "prop_soccer_ball") == 0)
@@ -595,9 +593,16 @@ bool CTeamFortress2Mod::isBoss(edict_t* pEntity, float* fFactor)
 			m_pBoss = pEntity;
 			return true;
 		}
+		if (isTankBoss(pEntity))
+		{
+			/*if (fFactor != nullptr)
+				*fFactor = -200.0f;*/
+			m_pBoss = pEntity;
+			return true;
+		}
 
 	}
-	/*else if (CTeamFortress2Mod::isMapType(TF_MAP_PIPEBALL))
+	else if (CTeamFortress2Mod::isMapType(TF_MAP_PIPEBALL))
 	{
 		if (m_pBoss.get() == pEntity)
 			return true;
@@ -616,15 +621,15 @@ bool CTeamFortress2Mod::isBoss(edict_t* pEntity, float* fFactor)
 			return true;
 		}
 
-	}*/
-	else if (CTeamFortress2Mod::isMapType(TF_MAP_MVM)/* || std::strncmp(szmapname, "stt_", 4) == 0 && (CBotGlobals::getTeam(pEntity) == TF2_TEAM_RED)*/)
+	}
+	else if (CTeamFortress2Mod::isMapType(TF_MAP_MVM))
 	{
 		if (m_pBoss.get() == pEntity)
 			return true;
-		if (isTankBoss(pEntity))
+		if (isTankBoss(pEntity)) /* && CClassInterface::getTeam(pEntity) != iTeam)*/
 		{
-			if (fFactor != nullptr)
-				*fFactor = 200.0f;
+			/*if (fFactor != nullptr)
+				*fFactor = -200.0f;*/
 
 			m_pBoss = pEntity;
 			return true;
@@ -923,9 +928,10 @@ bool CTeamFortress2Mod::isPayloadBomb(edict_t* pEdict, int iTeam)
 	{
 		return (std::strncmp(pEdict->GetClassName(), "prop_dynamic", 12) == 0) && std::strcmp(model.ToCStr(), "models/props_doomsday/cap_point_small.mdl") == 0;
 	}
-	if (std::strncmp(szmapname, "ctf_system", 10) == 0)
+	if (std::strncmp(szmapname, "ctf_system", sizeof("ctf_system") - 1) == 0)
 	{
-		return std::strncmp(pEdict->GetClassName(), "item_teamflag", 21) == 0 && CClassInterface::getTeam(pEdict) == iTeam;
+		return std::strncmp(pEdict->GetClassName(), "item_teamflag", sizeof("item_teamflag") - 1) == 0
+			&& CClassInterface::getTeam(pEdict) == iTeam;
 	}
 	if (CTeamFortress2Mod::isMapType(TF_MAP_CARTRACE) ||
 		CTeamFortress2Mod::isMapType(TF_MAP_CPPL) ||

@@ -1425,17 +1425,14 @@ bool CWaypointNavigator :: routeFound ()
 /////////////////////////////////////////////////////////
 
 // draw paths from this waypoint (if waypoint drawing is on)
-void CWaypoint :: drawPaths (edict_t* pEdict, const unsigned short int iDrawType) const
+void CWaypoint::drawPaths(edict_t* pEdict, const unsigned short int iDrawType) const
 {
-	const int iPaths = numPaths();
-
-	for ( int i = 0; i < iPaths; i ++ ) //TODO: Improve loop [APG]RoboCop[CL]
+	for (const int iWpt : *this)
 	{
-		const int iWpt = getPath(i);
-
-		CWaypoint* pWpt = CWaypoints::getWaypoint(iWpt);
-
-		drawPathBeam(pWpt,iDrawType);
+		if (CWaypoint* pWpt = CWaypoints::getWaypoint(iWpt))
+		{
+			drawPathBeam(pWpt, iDrawType);
+		}
 	}
 }
 // draws one path beam

@@ -3112,8 +3112,9 @@ void CBotTF2SnipeCrossBow::execute(CBot *pBot, CBotSchedule *pSchedule)
 				m_vEnemy = CBotGlobals::entityOrigin(pBot->getEnemy());
 				m_fEnemyTime = engine->Time();
 
-				if (m_fAimTime == 0.0f)
-					m_fAimTime = engine->Time() + randomFloat(0.1f, 0.3f);
+				// Check m_fEnemyTime instead of m_fAimTime if that was the intention - [APG]RoboCop[CL]
+				if (m_fEnemyTime == 0.0f)
+					m_fEnemyTime = engine->Time() + randomFloat(0.1f, 0.3f);
 
 				// too close for sniper rifle
 				if (pBot->distanceFrom(pBot->getEnemy()) < 200.0f)
@@ -3403,16 +3404,17 @@ void CBotTF2Snipe :: execute (CBot *pBot, CBotSchedule *pSchedule)
 
 		if ( CTeamFortress2Mod::TF2_IsPlayerZoomed(pBot->getEdict()) && pBot->hasEnemy() )
 		{
-			if ( pBot->hasSomeConditions(CONDITION_SEE_CUR_ENEMY) )
+			if (pBot->hasSomeConditions(CONDITION_SEE_CUR_ENEMY))
 			{
 				m_vEnemy = CBotGlobals::entityOrigin(pBot->getEnemy());
 				m_fEnemyTime = engine->Time();
 
-				if ( m_fAimTime == 0.0f )
-					m_fAimTime = engine->Time() + randomFloat(0.1f,0.3f);
+				// Check m_fEnemyTime instead of m_fAimTime if that was the intention - [APG]RoboCop[CL]
+				if (m_fEnemyTime == 0.0f)
+					m_fEnemyTime = engine->Time() + randomFloat(0.1f, 0.3f);
 
 				// too close for sniper rifle
-				if ( pBot->distanceFrom(pBot->getEnemy()) < 200.0f )
+				if (pBot->distanceFrom(pBot->getEnemy()) < 200.0f)
 				{
 					complete();
 					return;
@@ -3777,11 +3779,11 @@ void CThrowGrenadeTask ::execute (CBot *pBot,CBotSchedule *pSchedule)
 		return;
 	}
 
-	if ( !m_pWeapon )
+	/*if ( !m_pWeapon )
 	{
 		fail();
 		return;
-	}
+	}*/
 
 	const CBotWeapon* pWeapon = pBot->getCurrentWeapon();
 	pBot->wantToChangeWeapon(false);

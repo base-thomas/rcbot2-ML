@@ -873,8 +873,8 @@ void RCBotPluginMeta::BotQuotaCheck() {
 				}
 			}
 
-			if (client != nullptr && client->getPlayer() != nullptr && client->isUsed()) {
-				IPlayerInfo *p = playerinfomanager->GetPlayerInfo(client->getPlayer());
+			if (client->getPlayer() != nullptr && client->isUsed()) {
+				IPlayerInfo* p = playerinfomanager->GetPlayerInfo(client->getPlayer());
 
 				if (p->IsConnected() && !p->IsFakeClient() && !p->IsHLTV()) {
 					human_count++;

@@ -614,9 +614,6 @@ CBotWeapon* CBotWeapons::getBestWeapon(edict_t* pEnemy, const bool bAllowMelee, 
 	{
 		CBotWeapon* pWeapon = &m_theWeapon;
 
-		if (!pWeapon)
-			continue;
-
 		if (!pWeapon->hasWeapon())
 			continue;
 

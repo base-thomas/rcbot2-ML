@@ -90,11 +90,13 @@ cell_t sm_RCBotGetProfileInt(IPluginContext *pContext, const cell_t *params) {
 	const RCBotProfileVar profileVar = static_cast<RCBotProfileVar>(params[2]);
 	if (client < 1 || client > gpGlobals->maxClients) {
 		pContext->ThrowNativeError("Invalid client index %d", client);
+		return 0;
 	}
 
 	const CBot* bot = CBots::getBot(client - 1);
 	if (!bot) {
 		pContext->ThrowNativeError("Client index %d is not a RCBot", client);
+		return 0;
 	}
 	
 	CBotProfile* profile = bot->getProfile();
@@ -107,18 +109,20 @@ cell_t sm_RCBotGetProfileInt(IPluginContext *pContext, const cell_t *params) {
 }
 
 /* native float RCBot2_GetProfileFloat(int client, RCBotProfileVar property); */
-cell_t sm_RCBotGetProfileFloat(IPluginContext *pContext, const cell_t *params) {
+cell_t sm_RCBotGetProfileFloat(IPluginContext* pContext, const cell_t* params) {
 	const int client = params[1];
 	const RCBotProfileVar profileVar = static_cast<RCBotProfileVar>(params[2]);
 	if (client < 1 || client > gpGlobals->maxClients) {
 		pContext->ThrowNativeError("Invalid client index %d", client);
+		return 0;
 	}
 
 	const CBot* bot = CBots::getBot(client - 1);
 	if (!bot) {
 		pContext->ThrowNativeError("Client index %d is not a RCBot", client);
+		return 0;
 	}
-	
+
 	CBotProfile* profile = bot->getProfile();
 	const float* value = GetFloatProperty(profile, profileVar);
 	if (!value) {
