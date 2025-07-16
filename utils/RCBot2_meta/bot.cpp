@@ -3057,8 +3057,9 @@ void CBot :: jump () const
 
 void CBot :: duck (const bool hold) const
 {
+	ConVar *ts = g_pCVar->FindVar("host_timescale"); // CUSTOM MOD see note below:
 	if ( hold || m_pButtons->canPressButton(IN_DUCK) )
-		m_pButtons->holdButton(IN_DUCK,0.0f/* time to press*/,0.84f/* hold time*/,0.0f/*let go time*/); // CUSTOM MOD DURATIONS
+		m_pButtons->holdButton(IN_DUCK,0.0f/* time to press*/, 0.84f / ts->GetFloat() /* hold time*/,0.0f/*let go time*/); // CUSTOM MOD duration now automatically scales from host_timescale
 }
 
 // TODO: perceptron method
