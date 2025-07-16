@@ -7,6 +7,10 @@
 #include "bot_profile.h"
 #include "bot_waypoint.h"
 
+#include "smsdk_config.h"
+#include "rcbot/logging.h"
+#include "bot_globals.h"
+
 enum RCBotProfileVar : std::uint8_t {
 	RCBotProfile_iVisionTicks,
 	RCBotProfile_iPathTicks,
