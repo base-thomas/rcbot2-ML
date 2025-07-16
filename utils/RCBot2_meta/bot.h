@@ -395,8 +395,13 @@ public:
 
 	CBotWeapon *getBestWeapon ( edict_t *pEnemy, bool bAllowMelee = true, bool bAllowMeleeFallback = true, bool bMeleeOnly = false, bool bExplosivesOnly = false ) const;
 
-	virtual void modThink () {
-	}
+	virtual void modThink () {}
+
+	virtual void doModMove ( int ws, int sd ); // CUSTOM MOD
+ 
+        virtual void setModLook ( const Vector& vLook ); // CUSTOM MOD
+ 
+        virtual void doModLook (); // CUSTOM MOD
 
 	virtual bool isEnemy ( edict_t *pEdict, bool bCheckWeapons = true ) { return false; }
 
@@ -467,6 +472,8 @@ public:
 	bool FVisible (const Vector &vOrigin, edict_t *pDest = nullptr) const;
 
 	Vector getEyePosition () const;
+
+	void mlThink (); //base_thomas CUSTOM MOD
 
 	void think ();
 
