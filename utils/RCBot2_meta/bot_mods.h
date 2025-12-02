@@ -231,7 +231,7 @@ public:
 		m_iNumAlliesBombsOnMap = 0;
 		std::memset(m_bBombPlanted,0,sizeof(bool)*MAX_DOD_FLAGS);
 		std::memset(m_pFlags,0,sizeof(edict_t*)*MAX_DOD_FLAGS);
-		std::memset(m_pBombs,0,sizeof(edict_t*)*MAX_DOD_FLAGS*2);
+		std::memset(m_pBombs,0,sizeof(edict_t*)*MAX_DOD_FLAGS*8);
 
 		for (int& i : m_iWaypoint)
 		{
@@ -258,9 +258,9 @@ public:
 	bool getRandomEnemyControlledFlag (const CBot *pBot, Vector *position, int iTeam, int *id = nullptr) const;
 	bool getRandomTeamControlledFlag (const CBot *pBot, Vector *position, int iTeam, int *id = nullptr) const;
 
-	bool getRandomBombToDefuse (Vector *position, int iTeam, edict_t **pBombTarget, int *id = nullptr) const;
-	bool getRandomBombToPlant (const CBot *pBot, Vector *position, int iTeam, edict_t **pBombTarget, int *id = nullptr) const;
-	bool getRandomBombToDefend (CBot *pBot, Vector *position, int iTeam, edict_t **pBombTarget, int *id = nullptr) const;
+	bool getRandomBombToDefuse (Vector& position, int iTeam, edict_t*& pBombTarget, int* id = nullptr) const;
+	bool getRandomBombToPlant (CBot* pBot, Vector& position, int iTeam, edict_t*& pBombTarget, int* id = nullptr) const;
+	bool getRandomBombToDefend (CBot* pBot, Vector* position, int iTeam, edict_t** pBombTarget, int* id = nullptr) const;
 
 	int findNearestObjective (const Vector& vOrigin) const;
 
@@ -520,7 +520,7 @@ public:
 
 private:
 	edict_t *m_pFlags[MAX_DOD_FLAGS];
-	edict_t *m_pBombs[MAX_DOD_FLAGS][2]; // maximum of 2 bombs per capture point
+	edict_t* m_pBombs[MAX_DOD_FLAGS][8]; // maximum of 8 bombs per capture point increased for stability [APG]RoboCop[CL]
 	int m_iWaypoint[MAX_DOD_FLAGS];
 
 	int m_iNumControlPoints;

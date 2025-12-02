@@ -1050,13 +1050,13 @@ private:
 class CBotFF : public CBotFortress
 {
 public:
-	CBotFF() { CBotFortress(); } //TODO: unused object [APG]RoboCop[CL]
+	CBotFF() = default;
 
-	void modThink () override;
+	void modThink() override;
 
-	bool isEnemy ( edict_t *pEdict,bool bCheckWeapons = true ) override;
+	bool isEnemy(edict_t* pEdict, bool bCheckWeapons = true) override;
 
-	bool isTF () override { return true; }
+	bool isTF() override { return true; }
 
 };
 

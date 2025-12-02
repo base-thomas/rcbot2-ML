@@ -29,7 +29,7 @@ extern CGlobalVars *gpGlobals;
 /**
  * Wrap some API calls for legacy MM:S.
  */
-#if !defined METAMOD_PLAPI_VERSION
+#ifndef METAMOD_PLAPI_VERSION
 #define GetEngineFactory engineFactory
 #define GetServerFactory serverFactory
 #define MM_Format snprintf

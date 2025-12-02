@@ -85,37 +85,32 @@ extern IVDebugOverlay *debugoverlay;
 
 ///////////////////////////////////////////////////////////////
 // initialise
-void CWaypointNavigator :: init ()
+void CWaypointNavigator::init()
 {
 	m_pBot = nullptr;
 
-	m_vOffset = Vector(0,0,0);
+	m_vOffset = Vector(0, 0, 0);
 	m_bOffsetApplied = false;
 
 	m_iCurrentWaypoint = -1;
 	m_iNextWaypoint = -1;
 	m_iGoalWaypoint = -1;
 
-	while (!m_currentRoute.empty()) {
-		m_currentRoute.pop();
-	}
-
-	// TODO: queue doesn't implement .clear() -- maybe use deque instead?
-	while( !m_oldRoute.empty() )
-		m_oldRoute.pop();
+	std::stack<int>().swap(m_currentRoute);
+	std::queue<int>().swap(m_oldRoute);
 
 	m_iLastFailedWpt = -1;
 	m_iPrevWaypoint = -1;
 	m_bWorkingRoute = false;
 
-	Q_memset(m_fBelief,0,sizeof(float)*CWaypoints::MAX_WAYPOINTS);
+	std::memset(m_fBelief, 0, sizeof(float) * CWaypoints::MAX_WAYPOINTS);
 
 	m_iFailedGoals.clear();
 }
 
-bool CWaypointNavigator :: beliefLoad () 
+bool CWaypointNavigator::beliefLoad()
 {
-	unsigned short int filebelief [ CWaypoints::MAX_WAYPOINTS ];
+	unsigned short int filebelief[CWaypoints::MAX_WAYPOINTS];
 
 	char filename[1024];
 
@@ -123,88 +118,90 @@ bool CWaypointNavigator :: beliefLoad ()
 
 	m_bLoadBelief = false;
 	m_iBeliefTeam = static_cast<short>(m_pBot->getTeam());
-	
+
 	snprintf(mapname, sizeof(mapname), "%s%d", CBotGlobals::getMapName(), m_iBeliefTeam);
 
-	CBotGlobals::buildFileName(filename,mapname,BOT_WAYPOINT_FOLDER,"rcb",true);
+	CBotGlobals::buildFileName(filename, mapname, BOT_AUXILERY_FOLDER, "rcb", true);
 
-	std::fstream bfp = CBotGlobals::openFile(filename, std::fstream::in | std::fstream::binary);
+	std::fstream bfp(filename, std::ios::in | std::ios::binary);
 
-	if ( !bfp )
+	if (!bfp)
 	{
 		logger->Log(LogLevel::ERROR, "Can't open Waypoint belief array for reading!");
 		return false;
 	}
 
-   bfp.seekg(0, std::fstream::end); // seek at end
+	bfp.seekg(0, std::ios::end); // seek at end
 
 	const std::size_t iSize = bfp.tellg(); // get file size
 	const std::size_t iDesiredSize = static_cast<std::size_t>(CWaypoints::numWaypoints()) * sizeof(unsigned short int);
 
-   // size not right, return false to re workout table
-   if ( iSize != iDesiredSize )
-   {
-	   return false;
-   }
+	// size not right, return false to re workout table
+	if (iSize != iDesiredSize)
+	{
+		return false;
+	}
 
-   bfp.seekg(0, std::fstream::beg); // seek at start
+	bfp.seekg(0, std::ios::beg); // seek at start
 
-   std::memset(filebelief,0,sizeof(unsigned short int)*CWaypoints::MAX_WAYPOINTS);
+	std::memset(filebelief, 0, sizeof(unsigned short int) * CWaypoints::MAX_WAYPOINTS);
 
-   bfp.read(reinterpret_cast<char*>(filebelief), static_cast<std::streamsize>(sizeof(unsigned short)) * CWaypoints::numWaypoints());
+	bfp.read(reinterpret_cast<char*>(filebelief), static_cast<std::streamsize>(sizeof(unsigned short)) * CWaypoints::numWaypoints());
 
-   // convert from short int to float
+	// convert from short int to float
 
 	const unsigned short int num = static_cast<unsigned short>(CWaypoints::numWaypoints());
 
-   // quick loop
-   for ( unsigned short int i = 0; i < num; i ++ )
-   {
+	// quick loop
+	for (unsigned short int i = 0; i < num; i++)
+	{
 	   m_fBelief[i] = static_cast<float>(filebelief[i])/32767 * MAX_BELIEF;
-   }
+	}
 
-   return true;
+	return true;
 }
+
 // update belief array with averaged belief for this team
-bool CWaypointNavigator :: beliefSave (const bool bOverride) 
+bool CWaypointNavigator::beliefSave(const bool bOverride)
 {
-	unsigned short int filebelief [ CWaypoints::MAX_WAYPOINTS ];
-   char filename[1024];
-   char mapname[512];
+	unsigned short int filebelief[CWaypoints::MAX_WAYPOINTS];
+	char filename[1024];
+	char mapname[512];
 
-   if ( m_pBot->getTeam() == m_iBeliefTeam && !bOverride )
-	   return false;
+	if (m_pBot->getTeam() == m_iBeliefTeam && !bOverride)
+		return false;
 
-   std::memset(filebelief,0,sizeof(unsigned short int)*CWaypoints::MAX_WAYPOINTS);
+	std::memset(filebelief, 0, sizeof(unsigned short int) * CWaypoints::MAX_WAYPOINTS);
 
-   // m_iBeliefTeam is the team we've been using -- we might have changed team now
-   // so would need to change files if a different team
-   // stick to the current team we've been using
-   snprintf(mapname, sizeof(mapname), "%s%d", CBotGlobals::getMapName(), m_iBeliefTeam);
-   CBotGlobals::buildFileName(filename,mapname,BOT_WAYPOINT_FOLDER,"rcb",true);
+	// m_iBeliefTeam is the team we've been using -- we might have changed team now
+	// so would need to change files if a different team
+	// stick to the current team we've been using
+	snprintf(mapname, sizeof(mapname), "%s%d", CBotGlobals::getMapName(), m_iBeliefTeam);
+	CBotGlobals::buildFileName(filename, mapname, BOT_AUXILERY_FOLDER, "rcb", true);
 
-   std::fstream bfp = CBotGlobals::openFile(filename, std::fstream::in | std::fstream::binary);
+	{
+		std::fstream bfp(filename, std::ios::in | std::ios::binary);
 
-   if ( bfp )
-   {
-	   bfp.seekg(0, std::fstream::end); // seek at end
+		if (bfp)
+		{
+			bfp.seekg(0, std::ios::end); // seek at end
 
-	   const std::size_t iSize = bfp.tellg(); // get file size
-	   const std::size_t iDesiredSize = static_cast<std::size_t>(CWaypoints::numWaypoints()) * sizeof(unsigned short int);
-		
-	   // size not right, return false to re workout table
-	   if ( iSize == iDesiredSize )
-	   {
-		   bfp.seekg(0, std::fstream::beg); // seek at start
+			const std::size_t iSize = bfp.tellg(); // get file size
+			const std::size_t iDesiredSize = static_cast<std::size_t>(CWaypoints::numWaypoints()) * sizeof(unsigned short int);
 
-		   if ( bfp )
-			   bfp.read(reinterpret_cast<char*>(filebelief), static_cast<std::streamsize>(sizeof(unsigned short)) * CWaypoints::numWaypoints());
-	   }
-   }
+			// size not right, return false to re workout table
+			if (iSize == iDesiredSize)
+			{
+				bfp.seekg(0, std::ios::beg); // seek at start
 
-   bfp = CBotGlobals::openFile(filename, std::fstream::out | std::fstream::binary);
+				bfp.read(reinterpret_cast<char*>(filebelief), static_cast<std::streamsize>(sizeof(unsigned short)) * CWaypoints::numWaypoints());
+			}
+		}
+	}
 
-	if ( !bfp )
+	std::fstream bfp(filename, std::ios::out | std::ios::binary);
+
+	if (!bfp)
 	{
 		m_bLoadBelief = true;
 		m_iBeliefTeam = m_pBot->getTeam();
@@ -212,21 +209,21 @@ bool CWaypointNavigator :: beliefSave (const bool bOverride)
 		return false;
 	}
 
-   // convert from short int to float
+	// convert from short int to float
 
 	const unsigned short int num = static_cast<unsigned short>(CWaypoints::numWaypoints());
 
-   // quick loop
+	// quick loop
    for ( unsigned short int i = 0; i < num; i ++ )
    {
 	   filebelief[i] = filebelief[i]/2 + static_cast<unsigned short>(m_fBelief[i] / MAX_BELIEF * 16383); 
    }
 
-   bfp.seekg(0, std::fstream::beg); // seek at start
+	bfp.seekg(0, std::ios::beg); // seek at start
 
-   bfp.write(reinterpret_cast<char*>(filebelief), static_cast<std::streamsize>(sizeof(unsigned short)) * num);
+	bfp.write(reinterpret_cast<char*>(filebelief), static_cast<std::streamsize>(sizeof(unsigned short)) * num);
 
-   // new team -- load belief 
+	// new team -- load belief 
 	m_iBeliefTeam = m_pBot->getTeam();
 	m_bLoadBelief = true;
 	m_bBeliefChanged = false; // saved
@@ -234,10 +231,10 @@ bool CWaypointNavigator :: beliefSave (const bool bOverride)
 	return true;
 }
 
-bool CWaypointNavigator :: wantToSaveBelief () 
-{ 
+bool CWaypointNavigator::wantToSaveBelief()
+{
 	// playing on this map for more than a normal load time
-	return m_bBeliefChanged && m_iBeliefTeam != m_pBot->getTeam() ;
+	return m_bBeliefChanged && m_iBeliefTeam != m_pBot->getTeam();
 }
 
 int CWaypointNavigator :: numPaths ()
@@ -2841,7 +2838,7 @@ CWaypoint* CWaypoints::randomWaypointGoalBetweenArea(const int iFlags, const int
 }
 
 CWaypoint* CWaypoints::randomWaypointGoal(const int iFlags, const int iTeam, const int iArea, const bool bForceArea,
-                                          const CBot* pBot, const bool bHighDanger, const int iSearchFlags, const int iIgnore)
+										  const CBot* pBot, const bool bHighDanger, const int iSearchFlags, const int iIgnore)
 {
 	static int size; 
 	CWaypoint *pWpt;
