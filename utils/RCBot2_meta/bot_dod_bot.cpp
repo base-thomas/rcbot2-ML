@@ -326,6 +326,9 @@ bool CDODBot :: startGame ()
 	if ( (m_iDesiredClass < 0) || (m_iDesiredClass > 5) )
 		chooseClass(false);
 
+	if (CClassInterface::getPlayerClassDOD(m_pEdict) < 0)
+		return false;
+
 	// not the correct class? and desired class is valid?
 	if ( (m_iDesiredClass >= 0) && (m_iDesiredClass <= 5) && (m_iDesiredClass != CClassInterface::getPlayerClassDOD(m_pEdict)) )
 	{
@@ -2496,7 +2499,7 @@ bool CDODBot :: executeAction ( CBotUtility *util )
 	case BOT_UTIL_DEFUSE_BOMB:
 		if ( util->getId() == BOT_UTIL_DEFUSE_BOMB )
 		{
-			if ( !CDODMod::m_Flags.getRandomBombToDefuse(&vGoal,m_iTeam,&pBombTarget,&id) )
+			if ( !CDODMod::m_Flags.getRandomBombToDefuse(vGoal,m_iTeam,pBombTarget,&id) )
 				return false;
 
 			if ( CDODMod::m_Flags.isTeamMateDefusing(m_pEdict,m_iTeam,id) )
@@ -2510,7 +2513,7 @@ bool CDODBot :: executeAction ( CBotUtility *util )
 		{
 			if ( util->getId() == BOT_UTIL_PLANT_BOMB )
 			{
-				if ( !CDODMod::m_Flags.getRandomBombToPlant(this,&vGoal,m_iTeam,&pBombTarget,&id) )
+				if ( !CDODMod::m_Flags.getRandomBombToPlant(this,vGoal,m_iTeam,pBombTarget,&id) )
 					return false;
 
 				if ( CDODMod::m_Flags.isTeamMatePlanting(m_pEdict,m_iTeam,id) )

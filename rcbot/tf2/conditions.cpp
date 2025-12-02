@@ -42,6 +42,8 @@
 static CTF2Conditions s_tf2_conditions;
 CTF2Conditions *tf2_conditions = &s_tf2_conditions;
 
+constexpr int CONDITION_BITS = 32;
+
 /// @brief Checks if the player is in a specific condition
 /// @param client Client/Player entity index to check
 /// @param cond Condition number to check
@@ -50,7 +52,7 @@ bool CTF2Conditions::TF2_IsPlayerInCondition(const int client, const TFCond cond
 {
 	const int iCond = cond;
 
-	switch (iCond / 32)
+	switch (iCond / CONDITION_BITS)
 	{
 		case 0:
 		{
@@ -68,7 +70,7 @@ bool CTF2Conditions::TF2_IsPlayerInCondition(const int client, const TFCond cond
 		}
 		case 1:
 		{
-			const int bit = (1 << (iCond - 32));
+			const int bit = (1 << (iCond - CONDITION_BITS));
 			if ((entprops->GetEntProp(client, Prop_Send, "m_nPlayerCondEx") & bit) == bit)
 			{
 				return true;
@@ -77,7 +79,7 @@ bool CTF2Conditions::TF2_IsPlayerInCondition(const int client, const TFCond cond
 		}
 		case 2:
 		{
-			const int bit = (1 << (iCond - 64));
+			const int bit = (1 << (iCond - (CONDITION_BITS * 2)));
 			if ((entprops->GetEntProp(client, Prop_Send, "m_nPlayerCondEx2") & bit) == bit)
 			{
 				return true;
@@ -86,7 +88,7 @@ bool CTF2Conditions::TF2_IsPlayerInCondition(const int client, const TFCond cond
 		}
 		case 3:
 		{
-			const int bit = (1 << (iCond - 96));
+			const int bit = (1 << (iCond - (CONDITION_BITS * 3)));
 			if ((entprops->GetEntProp(client, Prop_Send, "m_nPlayerCondEx3") & bit) == bit)
 			{
 				return true;
@@ -95,7 +97,7 @@ bool CTF2Conditions::TF2_IsPlayerInCondition(const int client, const TFCond cond
 		}
 		case 4:
 		{
-			const int bit = (1 << (iCond - 128));
+			const int bit = (1 << (iCond - (CONDITION_BITS * 4)));
 			if ((entprops->GetEntProp(client, Prop_Send, "m_nPlayerCondEx4") & bit) == bit)
 			{
 				return true;

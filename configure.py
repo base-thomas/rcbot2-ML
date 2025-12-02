@@ -1,5 +1,9 @@
 import sys
+import os
 from ambuild2 import run
+
+build_dir = os.path.join(sys.path[0], 'post')
+os.makedirs(build_dir, exist_ok=True)
 
 parser = run.BuildParser(sourcePath=sys.path[0], api='2.2')
 parser.options.add_argument('--hl2sdk-root', type=str, dest='hl2sdk_root', default=None,

@@ -145,13 +145,43 @@ bool CBotGlobals :: isCurrentMod (const eModId modid)
 	return m_pCurrentMod->getModId() == modid;
 }
 
+int CBotGlobals ::numPlayersPlaying()
+{
+	int num = CBotGlobals::numClients();
+
+	if (rcbot_ignore_spectators.GetBool())
+	{
+		for ( int i = 1; i <= CBotGlobals::maxClients(); i ++ )
+		{
+			edict_t* pEdict = INDEXENT(i);
+
+			if ( !pEdict )
+				continue;
+
+			if ( CBotGlobals::entityIsValid(pEdict) )
+			{
+				if ( CClassInterface::getTeam(pEdict) >= 2 )
+					continue;
+				if ( CBots::getBotPointer(pEdict) != nullptr )
+					continue;
+				num--;
+			}
+		}
+	}
+
+	return num;
+}
+
 int CBotGlobals ::numPlayersOnTeam(const int iTeam, const bool bAliveOnly)
 {
 	int num = 0;
 
-	for ( int i = 1; i <= CBotGlobals::numClients(); i ++ )
+	for ( int i = 1; i <= CBotGlobals::maxClients(); i ++ )
 	{
 		edict_t* pEdict = INDEXENT(i);
+
+		if ( !pEdict )
+			continue;
 
 		if ( CBotGlobals::entityIsValid(pEdict) )
 		{
@@ -163,6 +193,34 @@ int CBotGlobals ::numPlayersOnTeam(const int iTeam, const bool bAliveOnly)
 						num++;
 				}
 				else 
+					num++;
+			}
+		}
+	}
+	return num;
+}
+
+int CBotGlobals ::numBotsOnTeam(const int iTeam, const bool bAliveOnly)
+{
+	int num = 0;
+
+	for ( int i = 1; i <= CBotGlobals::maxClients(); i ++ )
+	{
+		edict_t* pEdict = INDEXENT(i);
+
+		if ( !pEdict )
+			continue;
+
+		if ( CBotGlobals::entityIsValid(pEdict) && CBots::getBotPointer(pEdict) != nullptr )
+		{
+			if ( CClassInterface::getTeam(pEdict) == iTeam )
+			{
+				if ( bAliveOnly )
+				{
+					if ( CBotGlobals::entityIsAlive(pEdict) )
+						num++;
+				}
+				else
 					num++;
 			}
 		}
@@ -583,6 +641,7 @@ int CBotGlobals :: countTeamMatesNearOrigin (const Vector& vOrigin, const float 
 int CBotGlobals :: numClients ()
 {
 	int iCount = 0;
+	int iIndex = 0;
 
 	for ( int i = 1; i <= CBotGlobals::maxClients(); i ++ )
 	{
@@ -590,13 +649,15 @@ int CBotGlobals :: numClients ()
 
 		if ( !pEdict )
 			continue;
-		
+
 		IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pEdict);
 		if (!p || p->IsHLTV())
 			continue;
 		
-		if ( engine->GetPlayerUserId(pEdict) > 0 )
+		if ( engine->GetPlayerUserId(pEdict) > 0 ) {
+			iIndex = i;
 			iCount++;
+		}
 	}
 
 	return iCount;

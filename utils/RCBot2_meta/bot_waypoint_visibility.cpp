@@ -52,16 +52,15 @@ void CWaypointVisibilityTable::workVisibility()
 	int iTicks = 0;
 	const unsigned short int iSize = static_cast<unsigned short int>(CWaypoints::numWaypoints());
 
-	//for ( unsigned short int iCurFrom = 0; iCurFrom < iSize; iCurFrom++ )
-	for (iCurFrom = 0; iCurFrom < iSize; iCurFrom++)
+	for (/*iCurFrom = iCurFrom*/; iCurFrom < iSize; iCurFrom++)
 	{
-		//for ( unsigned short int iCurTo = 0; iCurTo < iSize; iCurTo++ )
-		for (iCurTo = 0; iCurTo < iSize; iCurTo++)
+		for (/*iCurTo = iCurTo*/; iCurTo < iSize; iCurTo++)
 		{
 			CWaypoint* pWaypoint1 = CWaypoints::getWaypoint(iCurFrom);
 			CWaypoint* pWaypoint2 = CWaypoints::getWaypoint(iCurTo);
 
-			SetVisibilityFromTo(iCurFrom, iCurTo, CBotGlobals::isVisible(pWaypoint1->getOrigin(), pWaypoint2->getOrigin()));
+			SetVisibilityFromTo(iCurFrom, iCurTo,
+				CBotGlobals::isVisible(pWaypoint1->getOrigin(), pWaypoint2->getOrigin()));
 
 			iTicks++;
 
@@ -69,7 +68,7 @@ void CWaypointVisibilityTable::workVisibility()
 			{
 				if (m_fNextShowMessageTime < engine->Time())
 				{
-					const int percent = iCurFrom / iSize * 100;
+					const int percent = (iCurFrom / iSize) * 100;
 
 					if (m_iPrevPercent != percent)
 					{
@@ -160,7 +159,7 @@ bool CWaypointVisibilityTable::SaveToFile() const
 	char filename[1024];
 	wpt_vis_header_t header;
 
-	CBotGlobals::buildFileName(filename, CBotGlobals::getMapName(), BOT_WAYPOINT_FOLDER, "rcv", true);
+	CBotGlobals::buildFileName(filename, CBotGlobals::getMapName(), BOT_AUXILERY_FOLDER, BOT_VISIBILITY_EXTENSION, true);
 
 	std::fstream bfp = CBotGlobals::openFile(filename, std::fstream::out | std::fstream::binary);
 
@@ -175,7 +174,7 @@ bool CWaypointVisibilityTable::SaveToFile() const
 	header.waypoint_version = CWaypoints::WAYPOINT_VERSION;
 
 	bfp.write(reinterpret_cast<char*>(&header), sizeof(wpt_vis_header_t));
-	bfp.write(reinterpret_cast<char*>(m_VisTable), static_cast<std::streamsize>(sizeof(byte)) * g_iMaxVisibilityByte);
+	bfp.write(reinterpret_cast<char*>(m_VisTable), sizeof(byte) * g_iMaxVisibilityByte);
 
 	return true;
 }
@@ -186,7 +185,7 @@ bool CWaypointVisibilityTable::ReadFromFile(const int numwaypoints) const
 
 	wpt_vis_header_t header;
 
-	CBotGlobals::buildFileName(filename, CBotGlobals::getMapName(), BOT_WAYPOINT_FOLDER, "rcv", true);
+	CBotGlobals::buildFileName(filename, CBotGlobals::getMapName(), BOT_AUXILERY_FOLDER, BOT_VISIBILITY_EXTENSION, true);
 
 	std::fstream bfp = CBotGlobals::openFile(filename, std::fstream::in | std::fstream::binary);
 
@@ -205,7 +204,7 @@ bool CWaypointVisibilityTable::ReadFromFile(const int numwaypoints) const
 	if (std::strncmp(header.szMapName, CBotGlobals::getMapName(), 63) != 0)
 		return false;
 
-	bfp.read(reinterpret_cast<char*>(m_VisTable), static_cast<std::streamsize>(sizeof(byte)) * g_iMaxVisibilityByte);
+	bfp.read(reinterpret_cast<char*>(m_VisTable), sizeof(byte) * g_iMaxVisibilityByte);
 
 	return true;
 }

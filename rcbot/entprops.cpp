@@ -432,7 +432,7 @@ int CBotEntProp::GetEntProp(const int entity, const PropType proptype, const cha
 
 		if (td->fieldType == FIELD_CUSTOM && (td->flags & FTYPEDESC_OUTPUT) == FTYPEDESC_OUTPUT)
 		{
-			const variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + static_cast<std::intptr_t>(offset));
+			const variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + offset);
 
 			if ((bit_count = MatchTypeDescAsInteger(pVariant->fieldType, 0)) == 0)
 			{
@@ -705,7 +705,7 @@ bool *CBotEntProp::GetEntPropBoolPointer(const int entity, const PropType propty
 
 		if (td->fieldType == FIELD_CUSTOM && (td->flags & FTYPEDESC_OUTPUT) == FTYPEDESC_OUTPUT)
 		{
-			const variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + static_cast<std::intptr_t>(offset));
+			const variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + offset);
 
 			if ((bit_count = MatchTypeDescAsInteger(pVariant->fieldType, 0)) == 0)
 			{
@@ -819,7 +819,7 @@ bool CBotEntProp::SetEntProp(const int entity, const PropType proptype, const ch
 
 		if (td->fieldType == FIELD_CUSTOM && (td->flags & FTYPEDESC_OUTPUT) == FTYPEDESC_OUTPUT)
 		{
-			variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + static_cast<std::intptr_t>(offset));
+			variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + offset);
 			// These are the only three int-ish types that variants support. If set to valid one that isn't
 			// (32-bit) integer, leave it alone. It's probably the intended type.
 			if (pVariant->fieldType != FIELD_COLOR32 && pVariant->fieldType != FIELD_BOOLEAN)
@@ -1302,7 +1302,7 @@ int CBotEntProp::GetEntPropEnt(const int entity, const PropType proptype, const 
 			}
 			else // PropEnt_Variant
 			{
-				variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + static_cast<std::intptr_t>(offset));
+				variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + offset);
 
 				hndl = &pVariant->eVal;
 			}
@@ -1450,11 +1450,11 @@ bool CBotEntProp::SetEntPropEnt(const int entity, const PropType proptype, const
 			CBaseHandle *hndl;
 			if (type == PropEnt_Handle)
 			{
-				hndl = reinterpret_cast<CBaseHandle*>(reinterpret_cast<uint8_t*>(pEntity) + static_cast<ptrdiff_t>(offset));
+				hndl = reinterpret_cast<CBaseHandle*>(reinterpret_cast<uint8_t*>(pEntity) + offset);
 			}
 			else // PropEnt_Variant
 			{
-				variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + static_cast<std::intptr_t>(offset));
+				variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + offset);
 
 				hndl = &pVariant->eVal;
 			}
@@ -1562,7 +1562,7 @@ Vector CBotEntProp::GetEntPropVector(const int entity, const PropType proptype, 
 
 		if (td->fieldType == FIELD_CUSTOM && (td->flags & FTYPEDESC_OUTPUT) == FTYPEDESC_OUTPUT)
 		{
-			const variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + static_cast<std::intptr_t>(offset));
+			const variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + offset);
 
 			if (pVariant->fieldType != FIELD_VECTOR && pVariant->fieldType != FIELD_POSITION_VECTOR)
 			{
@@ -1655,7 +1655,7 @@ Vector *CBotEntProp::GetEntPropVectorPointer(const int entity, const PropType pr
 
 		if (td->fieldType == FIELD_CUSTOM && (td->flags & FTYPEDESC_OUTPUT) == FTYPEDESC_OUTPUT)
 		{
-			const variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + static_cast<std::intptr_t>(offset));
+			const variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + offset);
 
 			if (pVariant->fieldType != FIELD_VECTOR && pVariant->fieldType != FIELD_POSITION_VECTOR)
 			{
@@ -1749,7 +1749,7 @@ bool CBotEntProp::SetEntPropVector(const int entity, const PropType proptype, co
 
 		if (td->fieldType == FIELD_CUSTOM && (td->flags & FTYPEDESC_OUTPUT) == FTYPEDESC_OUTPUT)
 		{
-			variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + static_cast<std::intptr_t>(offset));
+			variant_t* pVariant = reinterpret_cast<variant_t*>(reinterpret_cast<std::intptr_t>(pEntity) + offset);
 
 			// Both of these are supported and we don't know which is intended. But, if it's already
 			// a pos vector, we probably want to keep that.
@@ -1908,7 +1908,7 @@ char *CBotEntProp::GetEntPropString(const int entity, const PropType proptype, c
 		{
 			DVariant var;
 
-			pProp->GetProxyFn()(pProp, pEntity,reinterpret_cast<const void*>(reinterpret_cast<std::intptr_t>(pEntity) + static_cast<std::intptr_t>(offset)), &var, element, entity);
+			pProp->GetProxyFn()(pProp, pEntity,reinterpret_cast<const void*>(reinterpret_cast<std::intptr_t>(pEntity) + offset), &var, element, entity);
 
 			src = var.m_pString; // hack because SDK 2013 declares this as const char*
 		}
@@ -2501,28 +2501,28 @@ int CBotEntProp::GameRules_GetProp(const char *prop, const int size, const int e
 
 	if (bit_count >= 17)
 	{
-		return *reinterpret_cast<int32_t*>(reinterpret_cast<std::intptr_t>(pGameRules) + static_cast<std::intptr_t>(offset));
+		return *reinterpret_cast<int32_t*>(reinterpret_cast<std::intptr_t>(pGameRules) + offset);
 	}
 
 	if (bit_count >= 9)
 	{
 		if (is_unsigned)
 		{
-			return *reinterpret_cast<uint16_t*>(reinterpret_cast<std::intptr_t>(pGameRules) + static_cast<std::intptr_t>(offset));
+			return *reinterpret_cast<uint16_t*>(reinterpret_cast<std::intptr_t>(pGameRules) + offset);
 		}
-		return *reinterpret_cast<int16_t*>(reinterpret_cast<std::intptr_t>(pGameRules) + static_cast<std::intptr_t>(offset));
+		return *reinterpret_cast<int16_t*>(reinterpret_cast<std::intptr_t>(pGameRules) + offset);
 	}
 
 	if (bit_count >= 2)
 	{
 		if (is_unsigned)
 		{
-			return *reinterpret_cast<uint8_t*>(reinterpret_cast<std::intptr_t>(pGameRules) + static_cast<std::intptr_t>(offset));
+			return *reinterpret_cast<uint8_t*>(reinterpret_cast<std::intptr_t>(pGameRules) + offset);
 		}
-		return *reinterpret_cast<int8_t*>(reinterpret_cast<std::intptr_t>(pGameRules) + static_cast<std::intptr_t>(offset));
+		return *reinterpret_cast<int8_t*>(reinterpret_cast<std::intptr_t>(pGameRules) + offset);
 	}
 
-	return *reinterpret_cast<bool*>(reinterpret_cast<std::intptr_t>(pGameRules) + static_cast<std::intptr_t>(offset)) ? 1 : 0;
+	return *reinterpret_cast<bool*>(reinterpret_cast<std::intptr_t>(pGameRules) + offset) ? 1 : 0;
 
 	//return -1;
 }
@@ -2546,7 +2546,7 @@ float CBotEntProp::GameRules_GetPropFloat(const char *prop, const int element) c
 	int elementCount = 1; //Unused? [APG]RoboCop[CL]
 	GAMERULES_FIND_PROP_SEND(DPT_Float, "float", 0.0f)
 
-	return *reinterpret_cast<float*>(reinterpret_cast<std::intptr_t>(pGameRules) + static_cast<std::intptr_t>(offset));
+	return *reinterpret_cast<float*>(reinterpret_cast<std::intptr_t>(pGameRules) + offset);
 }
 
 /// @brief Retrieves a entity index from a property of the gamerules entity.
@@ -2568,7 +2568,7 @@ int CBotEntProp::GameRules_GetPropEnt(const char *prop, const int element) const
 	int elementCount = 1; //Unused? [APG]RoboCop[CL]
 	GAMERULES_FIND_PROP_SEND(DPT_Int, "Integer", 0.0f)
 
-	const CBaseHandle& hndl = *reinterpret_cast<CBaseHandle*>(reinterpret_cast<std::intptr_t>(pGameRules) + static_cast<std::intptr_t>(offset));
+	const CBaseHandle& hndl = *reinterpret_cast<CBaseHandle*>(reinterpret_cast<std::intptr_t>(pGameRules) + offset);
 
 	CBaseEntity *pEntity = sm_gamehelpers->ReferenceToEntity(hndl.GetEntryIndex());
 
@@ -2599,7 +2599,7 @@ Vector CBotEntProp::GameRules_GetPropVector(const char *prop, const int element)
 	int elementCount = 1; //Unused? [APG]RoboCop[CL]
 	GAMERULES_FIND_PROP_SEND(DPT_Vector, "vector", Vector(0,0,0))
 
-	return *reinterpret_cast<Vector*>(reinterpret_cast<std::intptr_t>(pGameRules) + static_cast<std::intptr_t>(offset));
+	return *reinterpret_cast<Vector*>(reinterpret_cast<std::intptr_t>(pGameRules) + offset);
 }
 
 /// @brief Gets a gamerules property as a string.
@@ -2628,7 +2628,7 @@ char *CBotEntProp::GameRules_GetPropString(const char *prop, std::size_t *len, c
 	if (pProp->GetProxyFn())
 	{
 		DVariant var;
-		pProp->GetProxyFn()(pProp, pGameRules, reinterpret_cast<const void*>(reinterpret_cast<std::intptr_t>(pGameRules) + static_cast<std::intptr_t>(offset)), &var, element, 0 /* TODO */);
+		pProp->GetProxyFn()(pProp, pGameRules, reinterpret_cast<const void*>(reinterpret_cast<std::intptr_t>(pGameRules) + offset), &var, element, 0 /* TODO */);
 		src = var.m_pString;
 	}
 	else

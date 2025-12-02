@@ -8,6 +8,7 @@ builder.SetBuildFolder('package')
 # Add any folders you need to this list
 folder_list = [
   'addons/metamod',
+  'addons/rcbot2/aux_data',
   'addons/rcbot2/bin',
   'addons/rcbot2/config',
   # 'addons/rcbot2/launcher',

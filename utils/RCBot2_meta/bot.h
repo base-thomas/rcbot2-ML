@@ -391,6 +391,11 @@ public:
 
 	virtual int getTeam ();
 
+	float getCreateTime() const
+	{
+		return m_fTimeCreated;
+	}
+
 	bool isUnderWater ( ) const;
 
 	CBotWeapon *getBestWeapon ( edict_t *pEnemy, bool bAllowMelee = true, bool bAllowMeleeFallback = true, bool bMeleeOnly = false, bool bExplosivesOnly = false ) const;
@@ -1087,7 +1092,9 @@ public:
 
 	static void roundStart ();
 
+	static void kickChosenBot (unsigned count = 1);
 	static void kickRandomBot (unsigned count = 1);
+	static void kickChosenBotOnTeam ( int team );
 	static void kickRandomBotOnTeam ( int team );
 
 	static void mapInit ();
@@ -1100,6 +1107,8 @@ public:
 
 	static void setMinBots (const int iMin) { m_iMinBots = iMin; }
 	static int getMinBots () { return m_iMinBots; }
+
+	static float getAddKickBotTime() { return m_flAddKickBotTime; }
 
 	static void botFunction ( IBotFunction *function );
 
